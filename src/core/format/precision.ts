@@ -30,7 +30,9 @@ export class PrecisionRegistry {
     if (this.map.has(`${q}USDT`)) return `${q}USDT`
     if (this.map.has(`${q}USDC`)) return `${q}USDC`
     const hit = this.list.find((s) => s.symbol.startsWith(q) || s.base === q)
-    return hit?.symbol ?? null
+    if (hit) return hit.symbol
+    if (q.endsWith('USDT') || q.endsWith('USDC')) return q
+    return `${q}USDT`
   }
 
   search(query: string, limit = 14): SymbolMeta[] {

@@ -5,6 +5,8 @@ import { addToWallet, emptyWallet, type LayerWallet } from './layerWallet'
 import { notionalToBucket } from './microBuckets'
 import { emptyBucketRow } from './layerMapper'
 
+export const KEEP_SECONDS = 3600
+
 export type SecondSlice = {
   sec: number
   buckets: LayerWallet[]
@@ -26,13 +28,11 @@ export class WindowLedger {
   }
 
   ingest(notional: number, side: Side, timeMs: number, price: number, priceStr: string): void {
+    if (!Number.isFinite(notional) || notional <= 0) return
+    if (!Number.isFinite(timeMs)) return
     const b = notionalToBucket(notional)
     const sec = Math.floor(timeMs / 1000)
-    let slice = this.slices[this.slices.length - 1]
-    if (!slice || slice.sec !== sec) {
-      slice = { sec, buckets: emptyBucketRow() }
-      this.slices.push(slice)
-    }
+    const slice = this.sliceFor(sec)
     addToWallet(slice.buckets[b], side, notional)
     addToWallet(this.session[b], side, notional)
     this.lastPrice = price
@@ -46,12 +46,16 @@ export class WindowLedger {
     }
   }
 
+  pruneKeep(nowMs: number, keepSec = KEEP_SECONDS): void {
+    this.pruneOlderThan(Math.floor(nowMs / 1000) - keepSec)
+  }
+
   sumWindow(windowSec: number, nowMs: number): LayerWallet[] {
     const nowSec = Math.floor(nowMs / 1000)
     const from = nowSec - windowSec + 1
     const out = emptyBucketRow()
     for (const s of this.slices) {
-      if (s.sec < from) continue
+      if (s.sec < from || s.sec > nowSec) continue
       mergeInto(out, s.buckets)
     }
     return out
@@ -67,6 +71,44 @@ export class WindowLedger {
       priceStr: this.lastPriceStr,
       open: this.sessionOpenPrice,
     }
+  }
+
+  sliceCount(): number {
+    return this.slices.length
+  }
+
+  /** Test / denetim: kovalar zaman sıralı mı */
+  isChronological(): boolean {
+    for (let i = 1; i < this.slices.length; i++) {
+      if (this.slices[i].sec <= this.slices[i - 1].sec) return false
+    }
+    return true
+  }
+
+  private sliceFor(sec: number): SecondSlice {
+    const last = this.slices[this.slices.length - 1]
+    if (!last) {
+      const created = { sec, buckets: emptyBucketRow() }
+      this.slices.push(created)
+      return created
+    }
+    if (last.sec === sec) return last
+    if (sec > last.sec) {
+      const created = { sec, buckets: emptyBucketRow() }
+      this.slices.push(created)
+      return created
+    }
+    for (let i = this.slices.length - 2; i >= 0; i--) {
+      if (this.slices[i].sec === sec) return this.slices[i]
+      if (this.slices[i].sec < sec) {
+        const created = { sec, buckets: emptyBucketRow() }
+        this.slices.splice(i + 1, 0, created)
+        return created
+      }
+    }
+    const created = { sec, buckets: emptyBucketRow() }
+    this.slices.unshift(created)
+    return created
   }
 }
 

@@ -70,6 +70,7 @@ export function App() {
         {WINDOW_OPTIONS.map((w) => (
           <button
             key={w}
+            data-testid={`win-${w}`}
             className={windowSec === w ? 'on' : ''}
             onClick={() => setWindow(w)}
           >
@@ -77,6 +78,7 @@ export function App() {
           </button>
         ))}
         <button
+          data-testid="win-oturum"
           className={windowSec === 'oturum' ? 'on' : ''}
           onClick={() => setWindow('oturum')}
         >
@@ -107,8 +109,10 @@ export function App() {
       <section className="foot-card">
         <div className="split">
           <div>
-            <span className="k">Son {windowLabel(windowSec === 'oturum' ? 60 : windowSec)}</span>
-            <b className={netWord(topNet) === 'ALIŞ' ? 'alis' : 'satis'}>
+            <span className="k" data-testid="win-label">
+              Son {windowLabel(windowSec)}
+            </span>
+            <b data-testid="win-net" className={netWord(topNet) === 'ALIŞ' ? 'alis' : 'satis'}>
               büyükler {netWord(topNet)} {formatCompactUsd(Math.abs(topNet))}
             </b>
           </div>
@@ -119,7 +123,9 @@ export function App() {
             </b>
           </div>
         </div>
-        <div className="ticks">{snap.tickCount.toLocaleString('tr-TR')} işlem · {statusLabel(status)}</div>
+        <div className="ticks" data-testid="tick-count">
+          {snap.tickCount.toLocaleString('tr-TR')} işlem · {statusLabel(status)}
+        </div>
         <p className="disclaimer">Bu tavsiye değil. Sadece borsadan gelen alış-satış sayımı.</p>
       </section>
 

@@ -16,6 +16,7 @@ export class FeedController {
   lastError: string | null = null
   private symbol = 'BTCUSDT'
   private onUi: (() => void) | null = null
+  private infoStarted = false
 
   constructor() {
     this.engine.setSymbol(this.symbol)
@@ -52,7 +53,10 @@ export class FeedController {
     this.engine.setSymbol(this.symbol)
     this.engine.start(20)
     this.onUi?.()
-    void this.precision.load().then(() => this.onUi?.())
+    if (!this.infoStarted) {
+      this.infoStarted = true
+      void this.precision.load().then(() => this.onUi?.())
+    }
     this.socket.connect(marketCombinedUrl([aggTradeStream(this.symbol)]))
   }
 

@@ -3,7 +3,7 @@
 import { parseAggTradePayload, type AggTrade } from '../market/aggTrade'
 import { LAYER_NAMES } from './layerNames'
 import { netDelta, totalCount, totalNotional, type LayerWallet } from './layerWallet'
-import { WindowLedger } from './windowLedger'
+import { KEEP_SECONDS, WindowLedger } from './windowLedger'
 import { fixedEdges, foldBuckets } from './layerMapper'
 import { detectShape, type ShapeId } from './morphology'
 
@@ -34,6 +34,10 @@ export type PyramidSnapshot = {
   tickCount: number
   shapeId: ShapeId
   shapeYazi: string
+  windowBuy: number
+  windowSell: number
+  sessionBuy: number
+  sessionSell: number
 }
 
 export type EngineListener = (s: PyramidSnapshot) => void
@@ -54,6 +58,16 @@ function toViews(wallets: LayerWallet[]): LayerView[] {
   }))
 }
 
+function sides(wallets: LayerWallet[]): { buy: number; sell: number } {
+  let buy = 0
+  let sell = 0
+  for (const w of wallets) {
+    buy += w.buyNotional
+    sell += w.sellNotional
+  }
+  return { buy, sell }
+}
+
 export class PyramidEngine {
   private readonly ledger = new WindowLedger()
   private symbol = 'BTCUSDT'
@@ -64,10 +78,20 @@ export class PyramidEngine {
   private flushTimer = 0
   private dirty = false
   private edges = fixedEdges()
+  private clock: () => number = () => Date.now()
   private cached: PyramidSnapshot = this.buildSnapshot()
 
+  /** Test için duvar saati. */
+  setClock(fn: () => number): void {
+    this.clock = fn
+  }
+
+  now(): number {
+    return this.clock()
+  }
+
   setSymbol(symbol: string): void {
-    this.symbol = symbol
+    this.symbol = symbol.toUpperCase()
     this.reset()
   }
 
@@ -75,6 +99,7 @@ export class PyramidEngine {
     this.ledger.reset()
     this.lastTrade = null
     this.tickCount = 0
+    this.dirty = false
     this.emit()
   }
 
@@ -87,6 +112,10 @@ export class PyramidEngine {
     return this.windowSec
   }
 
+  getSymbol(): string {
+    return this.symbol
+  }
+
   ingestRaw(raw: string): void {
     const t = parseAggTradePayload(raw)
     if (!t) return
@@ -96,12 +125,10 @@ export class PyramidEngine {
   ingestTrade(t: AggTrade): void {
     if (t.symbol !== this.symbol) return
     this.ledger.ingest(t.notional, t.side, t.timeMs, t.price, t.priceStr)
+    this.ledger.pruneKeep(this.now(), KEEP_SECONDS)
     this.lastTrade = t
     this.tickCount += 1
     this.dirty = true
-    if (typeof this.windowSec === 'number') {
-      this.ledger.pruneOlderThan(Math.floor(t.timeMs / 1000) - 3600 - 5)
-    }
   }
 
   subscribe(fn: EngineListener): () => void {
@@ -110,33 +137,52 @@ export class PyramidEngine {
   }
 
   start(fps = 20): void {
-    window.clearInterval(this.flushTimer)
-    this.flushTimer = window.setInterval(() => {
+    const tick = () => {
       if (!this.dirty) return
       this.dirty = false
       this.emit()
-    }, Math.round(1000 / fps))
+    }
+    if (typeof window !== 'undefined') {
+      window.clearInterval(this.flushTimer)
+      this.flushTimer = window.setInterval(tick, Math.round(1000 / fps))
+    } else {
+      this.flushTimer = setInterval(tick, Math.round(1000 / fps)) as unknown as number
+    }
   }
 
   stop(): void {
-    window.clearInterval(this.flushTimer)
+    if (typeof window !== 'undefined') window.clearInterval(this.flushTimer)
+    else clearInterval(this.flushTimer)
+  }
+
+  /** Test: bekleyen tick'i hemen bas. */
+  flush(): void {
+    this.dirty = false
+    this.emit()
   }
 
   snapshot(): PyramidSnapshot {
     return this.cached
   }
 
+  ledgerChronological(): boolean {
+    return this.ledger.isChronological()
+  }
+
   private buildSnapshot(): PyramidSnapshot {
-    const now = this.lastTrade?.timeMs ?? Date.now()
+    const now = this.now()
     const winBuckets =
       this.windowSec === 'oturum'
         ? this.ledger.sessionBuckets()
         : this.ledger.sumWindow(this.windowSec, now)
+    const sessionBuckets = this.ledger.sessionBuckets()
     const layers = toViews(foldBuckets(winBuckets, this.edges))
-    const sessionLayers = toViews(foldBuckets(this.ledger.sessionBuckets(), this.edges))
+    const sessionLayers = toViews(foldBuckets(sessionBuckets, this.edges))
     const px = this.ledger.lastPriceInfo()
     const changePct = px.open > 0 ? ((px.price - px.open) / px.open) * 100 : 0
     const shape = detectShape(layers)
+    const w = sides(winBuckets)
+    const s = sides(sessionBuckets)
     return {
       symbol: this.symbol,
       windowSec: this.windowSec,
@@ -149,6 +195,10 @@ export class PyramidEngine {
       tickCount: this.tickCount,
       shapeId: shape.id,
       shapeYazi: shape.yazi,
+      windowBuy: w.buy,
+      windowSell: w.sell,
+      sessionBuy: s.buy,
+      sessionSell: s.sell,
     }
   }
 

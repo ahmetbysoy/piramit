@@ -41,6 +41,7 @@ export function SymbolSearch({ registry, value, onPick, ready }: Props) {
     <div className="sym-box" ref={box}>
       <input
         className="sym-in"
+        data-testid="symbol-input"
         value={q}
         spellCheck={false}
         autoCapitalize="characters"
