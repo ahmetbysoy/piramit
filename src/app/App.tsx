@@ -139,7 +139,7 @@ export function App() {
           onPick={pickCoin}
         />
         <div className="px-block">
-          <div className="px">{listReady ? priceTxt : '···'}</div>
+          <div className="px">{snap.priceStr ? priceTxt : '···'}</div>
           <div className={snap.changePct >= 0 ? 'chg up' : 'chg dn'}>
             {snap.changePct >= 0 ? '+' : ''}
             {snap.changePct.toFixed(2)}%
@@ -289,13 +289,13 @@ export function App() {
             <span className="k" data-testid="win-label">
               Son {windowLabel(windowSec)}
             </span>
-            <b data-testid="win-net" className={netWord(topNet) === 'ALIŞ' ? 'alis' : 'satis'}>
+            <b data-testid="win-net" className={toneClass(topNet)}>
               büyükler {netWord(topNet)} {formatCompactUsd(Math.abs(topNet))}
             </b>
           </div>
           <div>
             <span className="k">Açılıştan</span>
-            <b className={netWord(sessTop) === 'ALIŞ' ? 'alis' : 'satis'}>
+            <b className={toneClass(sessTop)}>
               büyükler {netWord(sessTop)} {formatCompactUsd(Math.abs(sessTop))}
             </b>
           </div>
@@ -326,6 +326,13 @@ export function App() {
       </nav>
     </div>
   )
+}
+
+function toneClass(n: number): string {
+  const w = netWord(n)
+  if (w === 'ALIŞ') return 'alis'
+  if (w === 'SATIŞ') return 'satis'
+  return 'duz'
 }
 
 function statusLabel(s: string): string {

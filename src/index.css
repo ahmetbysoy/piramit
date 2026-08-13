@@ -379,6 +379,7 @@ body { overscroll-behavior: none; }
 .k { display: block; color: var(--dim); font-size: 11px; margin-bottom: 3px; }
 .alis { color: var(--alis); }
 .satis { color: var(--satis); }
+.duz { color: var(--dim); }
 .ticks { color: var(--dim); font-size: 11px; margin-top: 10px; }
 
 .nav {
@@ -473,10 +474,9 @@ body { overscroll-behavior: none; }
   list-style: none;
   margin: 6px 2px 0;
   padding: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 4px;
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 6px;
 }
 .legend li {
   display: flex;

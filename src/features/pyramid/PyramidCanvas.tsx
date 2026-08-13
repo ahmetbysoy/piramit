@@ -12,7 +12,6 @@ type Props = {
 export function PyramidCanvas({ layers, pulse }: Props) {
   const [tip, setTip] = useState<string | null>(null)
   const rev = [...layers].reverse()
-  const empty = rev.every((l) => l.share === 0)
   const maxShare = Math.max(...rev.map((l) => l.share), 0.0001)
   const vols = layers.map((l) => l.buyNotional + l.sellNotional).filter((n) => n > 0)
   const minN = vols.length ? Math.min(...vols) : 0
@@ -24,15 +23,16 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         {rev.map((l, i) => {
           const t = i / Math.max(rev.length - 1, 1)
           const taper = 0.42 + t * 0.58
-          const pct = empty ? 28 + t * 18 : Math.max(14, (l.share / maxShare) * 100 * taper)
+          const mute = l.share === 0
+          const pct = mute ? 10 + t * 4 : Math.max(18, (l.share / maxShare) * 100 * taper)
           const net = netWord(l.net)
-          const mark = empty || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'
+          const mark = mute || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'
           const buyR =
             l.buyNotional + l.sellNotional > 0
               ? l.buyNotional / (l.buyNotional + l.sellNotional)
               : 0.5
-          const tone = net === 'ALIŞ' ? 'alis' : net === 'SATIŞ' ? 'satis' : 'duz'
-          const glow = !empty && l.id >= SIGNAL.glowFromLayer
+          const tone = mute ? 'duz' : net === 'ALIŞ' ? 'alis' : net === 'SATIŞ' ? 'satis' : 'duz'
+          const glow = !mute && l.id >= SIGNAL.glowFromLayer
           return (
             <button
               type="button"
@@ -51,10 +51,10 @@ export function PyramidCanvas({ layers, pulse }: Props) {
                 {mark} {l.name}
               </span>
               <span className="py-track" aria-hidden>
-                <span className={`py-bar ${empty ? 'bos-bar' : ''}`} data-pulse={glow ? pulse % 3 : 0} />
+                <span className={`py-bar ${mute ? 'bos-bar' : ''}`} data-pulse={glow ? pulse % 3 : 0} />
               </span>
               <span className={`py-net ${tone}`}>
-                {net === 'DÜZ' ? 'düz' : net} {formatCompactUsd(Math.abs(l.net))}
+                {mute || net === 'DÜZ' ? 'düz' : net} {formatCompactUsd(Math.abs(l.net))}
               </span>
             </button>
           )
