@@ -11,14 +11,17 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(err: Error, info: ErrorInfo): void {
-    console.error(err, info.componentStack)
+    if (import.meta.env.DEV) console.error(err, info.componentStack)
   }
 
   render(): ReactNode {
     if (this.state.msg) {
       return (
-        <div style={{ padding: 24, color: '#ff4d6d' }}>
-          Ekran patladı: {this.state.msg}
+        <div className="err-bound">
+          <p>Ekran patladı: {this.state.msg}</p>
+          <button type="button" onClick={() => this.setState({ msg: null })}>
+            Tekrar dene
+          </button>
         </div>
       )
     }

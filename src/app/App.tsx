@@ -281,6 +281,7 @@ function statusLabel(s: string): string {
   if (s === 'acik') return 'canlı'
   if (s === 'baglaniyor') return 'bağlanıyor'
   if (s === 'yeniden') return 'yeniden'
+  if (s === 'olmedi') return 'koptu'
   return 'kapalı'
 }
 

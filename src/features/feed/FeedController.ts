@@ -15,7 +15,7 @@ import { PrecisionRegistry } from '../../core/format/precision'
 
 export class FeedController {
   readonly engine = new PyramidEngine()
-  readonly tape = new TapeBuffer(80)
+  readonly tape = new TapeBuffer(50)
   readonly socket = new BinanceSocket()
   readonly precision = new PrecisionRegistry()
   status: SocketStatus = 'kapali'

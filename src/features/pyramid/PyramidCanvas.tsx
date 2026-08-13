@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LayerView } from '../../core/engine/pyramidEngine'
 import { SIGNAL } from '../../core/engine/signalConfig'
 import { formatCompactUsd } from '../../core/format/money'
@@ -19,6 +19,8 @@ const MIN_BAR = 72
 export function PyramidCanvas({ layers, pulse }: Props) {
   const ref = useRef<HTMLCanvasElement>(null)
   const buf = useRef({ dpr: 0, w: 0, h: 0 })
+  const hits = useRef<{ y0: number; y1: number; l: LayerView }[]>([])
+  const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(null)
 
   useEffect(() => {
     const canvas = ref.current
@@ -50,6 +52,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       const maxShare = Math.max(...rev.map((l) => l.share), 0.0001)
       const rowH = (h - 12 - GAP * (rev.length - 1)) / rev.length
       const cx = w / 2
+      hits.current = []
 
       rev.forEach((l, i) => {
         const t = i / Math.max(rev.length - 1, 1)
@@ -58,6 +61,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
           ? EMPTY_BASE + t * EMPTY_GROW
           : Math.max(MIN_BAR, (l.share / maxShare) * (w - 8) * taper)
         const y = 6 + i * (rowH + GAP)
+        hits.current.push({ y0: y, y1: y + rowH, l })
         const x = cx - volW / 2
         const net = netWord(l.net)
         const buyR =
@@ -111,7 +115,45 @@ export function PyramidCanvas({ layers, pulse }: Props) {
     return () => ro.disconnect()
   }, [layers, pulse])
 
-  return <canvas ref={ref} className="py-canvas" aria-label="Katman piramidi, ALIŞ yukarı SATIŞ aşağı" />
+  const vols = layers.map((l) => l.buyNotional + l.sellNotional).filter((n) => n > 0)
+  const minN = vols.length ? Math.min(...vols) : 0
+  const maxN = vols.length ? Math.max(...vols) : 0
+
+  return (
+    <div className="py-wrap">
+      <canvas
+        ref={ref}
+        className="py-canvas"
+        aria-label="Katman piramidi, ALIŞ yukarı SATIŞ aşağı"
+        onMouseMove={(e) => {
+          const box = ref.current?.getBoundingClientRect()
+          if (!box) return
+          const y = e.clientY - box.top
+          const hit = hits.current.find((h) => y >= h.y0 && y <= h.y1)
+          if (!hit) {
+            setTip(null)
+            return
+          }
+          const l = hit.l
+          setTip({
+            x: e.clientX - box.left,
+            y: e.clientY - box.top,
+            text: `${l.name} · ▲ ${formatCompactUsd(l.buyNotional)} · ▼ ${formatCompactUsd(l.sellNotional)}`,
+          })
+        }}
+        onMouseLeave={() => setTip(null)}
+      />
+      {tip && (
+        <div className="py-tip" style={{ left: tip.x + 10, top: tip.y + 10 }}>
+          {tip.text}
+        </div>
+      )}
+      <div className="axis-labels">
+        <span>küçük {formatCompactUsd(minN || 0)}</span>
+        <span>büyük {formatCompactUsd(maxN)}</span>
+      </div>
+    </div>
+  )
 }
 
 function roundRect(

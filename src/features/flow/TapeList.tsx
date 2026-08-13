@@ -1,16 +1,19 @@
 import type { AggTrade } from '../../core/market/aggTrade'
 import { formatCompactUsd } from '../../core/format/money'
 
+const MAX_VISIBLE = 50
+
 export function TapeList({ trades }: { trades: AggTrade[] }) {
+  const sliced = trades.slice(0, MAX_VISIBLE)
   return (
     <div className="tape">
-      {trades.length === 0 && (
+      {sliced.length === 0 && (
         <div className="bos">
           <span className="spinner" aria-hidden />
           <p>Bağlanıyor…</p>
         </div>
       )}
-      {trades.map((t) => (
+      {sliced.map((t) => (
         <div key={`${t.tradeId}-${t.timeMs}`} className={`tick ${t.side === 'ALIS' ? 'alis' : 'satis'}`}>
           <span className="yon">{t.side === 'ALIS' ? '▲ ALIŞ' : '▼ SATIŞ'}</span>
           <span className="px">{t.priceStr}</span>

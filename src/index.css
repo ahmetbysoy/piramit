@@ -172,6 +172,41 @@ body { overscroll-behavior: none; }
 }
 
 .err { margin: 0 14px 8px; color: var(--satis); font-size: 12px; }
+.err .retry {
+  margin-left: 8px;
+  background: var(--card);
+  color: var(--txt);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.py-wrap { position: relative; }
+.py-tip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: #12161f;
+  color: var(--txt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  max-width: 240px;
+}
+.axis-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--dim);
+  padding: 4px 8px 0;
+}
+.err-bound { padding: 24px; color: var(--satis); }
+.err-bound button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 10px;
+}
 .headline {
   cursor: pointer;
   margin: 2px 16px 4px;

@@ -2,6 +2,7 @@
 
 import type { Side } from '../market/aggTrade'
 import { addToWallet, emptyWallet, type LayerWallet } from './layerWallet'
+import { addCents } from '../format/cents'
 import { notionalToBucket } from './microBuckets'
 import { emptyBucketRow } from './layerMapper'
 
@@ -116,8 +117,8 @@ function mergeInto(dst: LayerWallet[], src: LayerWallet[]): void {
   for (let i = 0; i < src.length; i++) {
     const a = dst[i] ?? emptyWallet()
     const b = src[i]
-    a.buyNotional += b.buyNotional
-    a.sellNotional += b.sellNotional
+    a.buyNotional = addCents(a.buyNotional, b.buyNotional)
+    a.sellNotional = addCents(a.sellNotional, b.sellNotional)
     a.buyCount += b.buyCount
     a.sellCount += b.sellCount
     dst[i] = a

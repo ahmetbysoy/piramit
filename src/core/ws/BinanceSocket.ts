@@ -1,6 +1,8 @@
 /** Tek sorumluluk: soket yaşam döngüsü. Mesajı yorumlamaz. */
 
-export type SocketStatus = 'kapali' | 'baglaniyor' | 'acik' | 'yeniden'
+import { MAX_RECONNECT, reconnectDelay } from './backoff'
+
+export type SocketStatus = 'kapali' | 'baglaniyor' | 'acik' | 'yeniden' | 'olmedi'
 
 export type SocketHandlers = {
   onOpen?: () => void
@@ -10,7 +12,6 @@ export type SocketHandlers = {
   onStatus?: (s: SocketStatus) => void
 }
 
-const MAX_BACKOFF_MS = 30_000
 const HOT_SWAP_MS = 23 * 60 * 60 * 1000
 
 export class BinanceSocket {
@@ -31,6 +32,7 @@ export class BinanceSocket {
     this.url = url
     this.closedByUser = false
     this.lastError = null
+    this.attempt = 0
     this.tearDownSocket()
     this.openSocket()
   }
@@ -106,9 +108,14 @@ export class BinanceSocket {
   }
 
   private scheduleReconnect(): void {
+    if (this.attempt >= MAX_RECONNECT) {
+      this.lastError = 'Bağlantı kesildi, yeniden dene.'
+      this.setStatus('olmedi')
+      return
+    }
     this.setStatus('yeniden')
     const jitter = Math.random() * 400
-    const delay = Math.min(1000 * 2 ** this.attempt, MAX_BACKOFF_MS) + jitter
+    const delay = reconnectDelay(this.attempt, jitter)
     this.attempt += 1
     window.clearTimeout(this.reconnectTimer)
     this.reconnectTimer = window.setTimeout(() => {

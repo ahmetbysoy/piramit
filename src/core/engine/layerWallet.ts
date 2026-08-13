@@ -1,5 +1,7 @@
 /** Tek sorumluluk: bir katmanın alış/satış sayacı. */
 
+import { addCents } from '../format/cents'
+
 export type LayerWallet = {
   buyNotional: number
   sellNotional: number
@@ -13,20 +15,20 @@ export function emptyWallet(): LayerWallet {
 
 export function addToWallet(w: LayerWallet, side: 'ALIS' | 'SATIS', notional: number): void {
   if (side === 'ALIS') {
-    w.buyNotional += notional
+    w.buyNotional = addCents(w.buyNotional, notional)
     w.buyCount += 1
   } else {
-    w.sellNotional += notional
+    w.sellNotional = addCents(w.sellNotional, notional)
     w.sellCount += 1
   }
 }
 
 export function netDelta(w: LayerWallet): number {
-  return w.buyNotional - w.sellNotional
+  return addCents(w.buyNotional, -w.sellNotional)
 }
 
 export function totalNotional(w: LayerWallet): number {
-  return w.buyNotional + w.sellNotional
+  return addCents(w.buyNotional, w.sellNotional)
 }
 
 export function totalCount(w: LayerWallet): number {
