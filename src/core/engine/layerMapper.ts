@@ -1,22 +1,22 @@
 /** Tek sorumluluk: mikro-kova dizisini 7 katmana grupla. */
 
 import { bucketCount, bucketFloor } from './microBuckets'
-import { FIXED_EDGES, LAYER_COUNT, type LayerId } from './layerNames'
-import {
-  emptyWallet,
-  type LayerWallet,
-} from './layerWallet'
+import { LAYER_COUNT, type LayerId } from './layerNames'
+import { emptyWallet, type LayerWallet } from './layerWallet'
 
 export function emptyBucketRow(): LayerWallet[] {
   return Array.from({ length: bucketCount() }, emptyWallet)
 }
 
-export function layerOfBucket(index: number, edges: number[]): LayerId {
-  const floor = bucketFloor(index)
+export function layerFromEdges(notional: number, edges: number[]): LayerId {
   for (let i = 0; i < LAYER_COUNT; i++) {
-    if (floor < edges[i + 1]) return i as LayerId
+    if (notional < edges[i + 1]) return i as LayerId
   }
   return 6
+}
+
+export function layerOfBucket(index: number, edges: number[]): LayerId {
+  return layerFromEdges(bucketFloor(index), edges)
 }
 
 export function foldBuckets(buckets: LayerWallet[], edges: number[]): LayerWallet[] {
@@ -31,8 +31,4 @@ export function foldBuckets(buckets: LayerWallet[], edges: number[]): LayerWalle
     dst.sellCount += src.sellCount
   }
   return out
-}
-
-export function fixedEdges(): number[] {
-  return [...FIXED_EDGES]
 }

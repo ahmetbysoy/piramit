@@ -34,6 +34,9 @@ def main() -> int:
         page.wait_for_selector("[data-testid=win-60]", timeout=15_000)
 
         assert page.locator("nav.nav").is_visible(), "alt nav yok"
+        page.click("[data-testid=tab-radar]")
+        page.wait_for_timeout(200)
+        page.click("nav.nav button:has-text('Piramit')")
 
         page.click("[data-testid=win-60]")
         assert "1dk" in page.locator("[data-testid=win-label]").inner_text()

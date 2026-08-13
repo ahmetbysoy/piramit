@@ -7,9 +7,11 @@ import { FeedController } from '../features/feed/FeedController'
 import { PyramidCanvas } from '../features/pyramid/PyramidCanvas'
 import { TapeList } from '../features/flow/TapeList'
 import { SymbolSearch } from '../features/settings/SymbolSearch'
+import { RadarList } from '../features/radar/RadarList'
 import { netWord } from '../ui/moneyTone'
+import { haptic } from '../telegram/webApp'
 
-type Tab = 'piramit' | 'akis'
+type Tab = 'piramit' | 'akis' | 'radar' | 'ayar'
 
 export function App() {
   const feed = useMemo(() => new FeedController(), [])
@@ -19,12 +21,14 @@ export function App() {
   const [symbol, setSymbol] = useState(feed.getSymbol())
   const [tapeTick, setTapeTick] = useState(0)
   const [listReady, setListReady] = useState(feed.precision.loaded)
+  const [radarTick, setRadarTick] = useState(0)
 
   useEffect(() => {
     feed.onChange(() => {
       setStatus(feed.status)
       setTapeTick((n) => n + 1)
       setListReady(feed.precision.loaded)
+      setRadarTick((n) => n + 1)
     })
     feed.start(symbol)
     const id = window.setInterval(() => setTapeTick((n) => n + 1), 250)
@@ -34,14 +38,21 @@ export function App() {
     }
   }, [feed, symbol])
 
+  useEffect(() => {
+    feed.setRadar(tab === 'radar')
+  }, [feed, tab])
+
   const windowSec = snap.windowSec
-  const setWindow = (w: WindowSec) => feed.engine.setWindow(w)
+  const setWindow = (w: WindowSec) => {
+    haptic()
+    feed.engine.setWindow(w)
+  }
   const tick = feed.precision.get(symbol)?.tickSize ?? '0.01'
   const priceTxt = formatPrice(snap.priceStr, tick)
 
   const topNet = snap.layers.slice(4).reduce((a, l) => a + l.net, 0)
-  const botNet = snap.layers.slice(0, 3).reduce((a, l) => a + l.net, 0)
   const sessTop = snap.sessionLayers.slice(4).reduce((a, l) => a + l.net, 0)
+  const headline = snap.divYazi || snap.shapeYazi
 
   return (
     <div className="shell">
@@ -51,7 +62,10 @@ export function App() {
           registry={feed.precision}
           value={symbol}
           ready={listReady}
-          onPick={setSymbol}
+          onPick={(s) => {
+            haptic()
+            setSymbol(s)
+          }}
         />
         <div className="px-block">
           <div className="px">{priceTxt}</div>
@@ -86,23 +100,40 @@ export function App() {
         </button>
       </div>
 
-      <p className="headline">{snap.shapeYazi}</p>
-      <p className="headline sub">{buildHeadline(topNet, botNet)}</p>
-
-      <div className="subtabs">
-        <button className={tab === 'piramit' ? 'on' : ''} onClick={() => setTab('piramit')}>
-          Piramit
-        </button>
-        <button className={tab === 'akis' ? 'on' : ''} onClick={() => setTab('akis')}>
-          Akış
-        </button>
-      </div>
+      <p className="headline">{headline}</p>
+      <p className="headline sub">{metaLine(snap)}</p>
 
       <main className="main glass">
-        {tab === 'piramit' ? (
+        {tab === 'piramit' && (
           <PyramidCanvas key={symbol} layers={snap.layers} pulse={snap.tickCount} />
-        ) : (
-          <TapeList trades={feed.tape.newestFirst()} key={tapeTick} />
+        )}
+        {tab === 'akis' && <TapeList trades={feed.tape.newestFirst()} key={tapeTick} />}
+        {tab === 'radar' && (
+          <RadarList key={radarTick} rows={feed.radar} onPick={setSymbol} />
+        )}
+        {tab === 'ayar' && (
+          <div className="ayar">
+            <p>Katman eşiği</p>
+            <div className="wins">
+              <button
+                className={snap.edgeMode === 'adaptif' ? 'on' : ''}
+                onClick={() => feed.engine.setEdgeMode('adaptif')}
+              >
+                Adaptif (coin’e göre)
+              </button>
+              <button
+                className={snap.edgeMode === 'sabit' ? 'on' : ''}
+                onClick={() => feed.engine.setEdgeMode('sabit')}
+              >
+                Sabit (BTC ölçeği)
+              </button>
+            </div>
+            <p className="dim">
+              Sinyal defteri: {snap.journalHits.ok}/{snap.journalHits.n || 0} isabet
+              (15dk sonra fiyat yönü). Tavsiye değil.
+            </p>
+            <p className="dim">Telegram’da BotFather → Mini App URL: bu site.</p>
+          </div>
         )}
       </main>
 
@@ -136,8 +167,16 @@ export function App() {
         <button className={tab === 'akis' ? 'on' : ''} onClick={() => setTab('akis')}>
           Akış
         </button>
-        <button disabled>Radar</button>
-        <button disabled>Ayar</button>
+        <button
+          data-testid="tab-radar"
+          className={tab === 'radar' ? 'on' : ''}
+          onClick={() => setTab('radar')}
+        >
+          Radar
+        </button>
+        <button className={tab === 'ayar' ? 'on' : ''} onClick={() => setTab('ayar')}>
+          Ayar
+        </button>
       </nav>
     </div>
   )
@@ -150,12 +189,26 @@ function statusLabel(s: string): string {
   return 'kapalı'
 }
 
-function buildHeadline(topNet: number, botNet: number): string {
-  const buyTop = topNet > 0
-  const buyBot = botNet > 0
-  if (Math.abs(topNet) < 1 && Math.abs(botNet) < 1) return 'Henüz vuruş yok, bekliyoruz.'
-  if (buyTop && !buyBot) return 'Büyükler ALIŞ yazıyor, küçükler SATIŞ — toplama kokusu.'
-  if (!buyTop && buyBot) return 'Küçükler kovalıyor, büyükler SATIŞ — boşaltma kokusu.'
-  if (buyTop && buyBot) return 'Her katmanda ALIŞ yağıyor.'
-  return 'Her katmanda SATIŞ yağıyor.'
+function metaLine(snap: {
+  burst: { count: number; merged: number } | null
+  oi: number | null
+  oiDelta: number | null
+  lastLiq: { side: string; notional: number } | null
+  edgeMode: string
+}): string {
+  const bits: string[] = []
+  bits.push(snap.edgeMode === 'adaptif' ? 'eşik: adaptif' : 'eşik: sabit')
+  if (snap.burst) {
+    bits.push(`salvo ${snap.burst.count} vuruş ≈ ${formatCompactUsd(snap.burst.merged)}`)
+  }
+  if (snap.oi != null) {
+    const d = snap.oiDelta
+    bits.push(
+      `OI ${formatCompactUsd(snap.oi)}${d == null ? '' : d >= 0 ? ' ↑' : ' ↓'}`,
+    )
+  }
+  if (snap.lastLiq) {
+    bits.push(`likidasyon ${snap.lastLiq.side} ${formatCompactUsd(snap.lastLiq.notional)}`)
+  }
+  return bits.join(' · ')
 }

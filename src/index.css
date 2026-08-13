@@ -206,15 +206,17 @@ body { overscroll-behavior: none; }
 
 .nav {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(460px, 100%);
+  z-index: 50;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   padding: 8px 8px calc(10px + var(--safe));
-  background: rgba(7, 9, 14, 0.88);
+  background: rgba(7, 9, 14, 0.94);
   border-top: 1px solid var(--line);
-  max-width: 460px;
-  margin: 0 auto;
   backdrop-filter: blur(14px);
 }
 .nav button { border-radius: 12px; padding: 11px 4px; }
@@ -226,3 +228,22 @@ body { overscroll-behavior: none; }
   font-size: 10px;
   padding: 0 14px 8px;
 }
+
+.radar { display: flex; flex-direction: column; gap: 4px; max-height: min(360px, 48dvh); overflow: auto; }
+.radar-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: rgba(12, 14, 20, 0.65);
+  border: 0;
+  color: var(--txt);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.radar-row .px { font-family: 'IBM Plex Mono', monospace; color: var(--dim); }
+.ayar { padding: 8px 10px 16px; }
+.ayar p { margin: 8px 0; }
+.ayar .dim { color: var(--dim); font-size: 13px; line-height: 1.4; }
