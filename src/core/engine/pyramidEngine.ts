@@ -11,6 +11,7 @@ import { edgesFromHistogram, fixedEdges } from './adaptiveEdges'
 import { BurstDetector, type BurstHit } from './burstDetector'
 import { scoreDivergence, type DivKind } from './divergence'
 import { SignalJournal } from './signalJournal'
+import { readClash } from './windowClash'
 
 export const WINDOW_OPTIONS = [60, 300, 900, 3600] as const
 export type WindowSec = (typeof WINDOW_OPTIONS)[number] | 'oturum'
@@ -53,6 +54,7 @@ export type PyramidSnapshot = {
   lastLiq: Liq | null
   journalHits: { n: number; ok: number }
   journal: { id: string; kind: string; symbol: string; price: number; at: number; later15: number | null }[]
+  clashYazi: string
 }
 
 export type EngineListener = (s: PyramidSnapshot) => void
@@ -268,6 +270,10 @@ export class PyramidEngine {
       botAbs,
       oiDelta: this.oiDelta,
     })
+    const shortLayers = toViews(foldBuckets(this.ledger.sumWindow(60, now), this.edges))
+    const shortTop = shortLayers.slice(4).reduce((a, l) => a + l.net, 0)
+    const sessTopNet = sessionLayers.slice(4).reduce((a, l) => a + l.net, 0)
+    const clash = readClash(shortTop, sessTopNet)
     if (div.kind !== 'yok' && px.price > 0) {
       this.journal.push({
         at: now,
@@ -308,6 +314,7 @@ export class PyramidEngine {
         at: r.at,
         later15: r.later15,
       })),
+      clashYazi: clash.yazi,
     }
   }
 

@@ -40,6 +40,7 @@ function snap(over: Partial<PyramidSnapshot> = {}): PyramidSnapshot {
     lastLiq: null,
     journalHits: { n: 0, ok: 0 },
     journal: [],
+    clashYazi: '',
     ...over,
   }
 }

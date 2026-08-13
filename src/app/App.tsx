@@ -66,7 +66,7 @@ export function App() {
 
   const topNet = snap.layers.slice(4).reduce((a, l) => a + l.net, 0)
   const sessTop = snap.sessionLayers.slice(4).reduce((a, l) => a + l.net, 0)
-  const headline = snap.divYazi || snap.shapeYazi
+  const headline = snap.clashYazi || snap.divYazi || snap.shapeYazi
 
   return (
     <div className="shell">

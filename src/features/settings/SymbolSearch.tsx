@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PrecisionRegistry, SymbolMeta } from '../../core/format/precision'
+import { loadFavs, toggleFav } from '../../core/store/favorites'
 
 type Props = {
   registry: PrecisionRegistry
@@ -12,11 +13,19 @@ export function SymbolSearch({ registry, value, onPick, ready }: Props) {
   const [q, setQ] = useState(value)
   const [open, setOpen] = useState(false)
   const [hi, setHi] = useState(0)
+  const [favs, setFavs] = useState<string[]>(() => (typeof localStorage !== 'undefined' ? loadFavs() : []))
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(() => setQ(value), [value])
 
-  const hits = useMemo(() => (ready ? registry.search(q) : []), [ready, registry, q, open])
+  const hits = useMemo(() => {
+    const base = ready ? registry.search(q) : []
+    if (q.trim()) return base
+    const favRows = favs
+      .map((s) => registry.get(s) ?? { symbol: s, base: s.replace(/USDT|USDC$/, ''), tickSize: '0.01', stepSize: '1' })
+      .filter((s) => !base.some((b) => b.symbol === s.symbol))
+    return [...favRows, ...base].slice(0, 14)
+  }, [ready, registry, q, open, favs])
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -68,21 +77,35 @@ export function SymbolSearch({ registry, value, onPick, ready }: Props) {
       />
       {open && (
         <ul className="sym-list">
-          {!ready && <li className="dim">Futures listesi geliyor…</li>}
+          {!ready && hits.length === 0 && <li className="dim">Futures listesi geliyor…</li>}
           {ready && hits.length === 0 && <li className="dim">Yok öyle coin.</li>}
-          {hits.map((s, i) => (
-            <li key={s.symbol}>
-              <button
-                type="button"
-                className={i === hi ? 'hi' : ''}
-                onMouseEnter={() => setHi(i)}
-                onClick={() => pick(s.symbol)}
-              >
-                <b>{pretty(s)}</b>
-                <span>{s.symbol}</span>
-              </button>
-            </li>
-          ))}
+          {hits.map((s, i) => {
+            const starred = favs.includes(s.symbol)
+            return (
+              <li key={s.symbol} className="sym-row">
+                <button
+                  type="button"
+                  className={i === hi ? 'hi' : ''}
+                  onMouseEnter={() => setHi(i)}
+                  onClick={() => pick(s.symbol)}
+                >
+                  <b>{pretty(s)}</b>
+                  <span>{s.symbol}</span>
+                </button>
+                <button
+                  type="button"
+                  className="star"
+                  aria-label="favori"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setFavs(toggleFav(s.symbol))
+                  }}
+                >
+                  {starred ? '★' : '☆'}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
