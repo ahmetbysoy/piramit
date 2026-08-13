@@ -214,7 +214,7 @@ body { overscroll-behavior: none; }
 }
 .py-row {
   display: grid;
-  grid-template-columns: 7.2rem minmax(48px, 1fr) 6.4rem;
+  grid-template-columns: 6.6rem minmax(40px, 1fr) 7.6rem;
   align-items: center;
   gap: 8px;
   width: 100%;
