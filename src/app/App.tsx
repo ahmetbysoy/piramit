@@ -9,6 +9,8 @@ import { TapeList } from '../features/flow/TapeList'
 import { SymbolSearch } from '../features/settings/SymbolSearch'
 import { RadarList } from '../features/radar/RadarList'
 import { JournalList } from '../features/divergence/JournalList'
+import { FavChips } from '../features/settings/FavChips'
+import { loadSaver, saveSaver } from '../core/store/dataSaver'
 import { netWord } from '../ui/moneyTone'
 import { haptic } from '../telegram/webApp'
 import { watchAlerts } from '../features/alert/watchAlerts'
@@ -26,6 +28,7 @@ export function App() {
   const [listReady, setListReady] = useState(feed.precision.loaded)
   const [radarTick, setRadarTick] = useState(0)
   const [alertOn, setAlertOn] = useState(false)
+  const [saver, setSaver] = useState(false)
   const prevSnap = useRef(snap)
 
   useEffect(() => {
@@ -49,7 +52,10 @@ export function App() {
 
   useEffect(() => {
     setAlertOn(alertsEnabled())
-  }, [])
+    const on = loadSaver()
+    setSaver(on)
+    feed.setSaver(on)
+  }, [feed])
 
   useEffect(() => {
     watchAlerts(prevSnap.current, snap)
@@ -90,6 +96,14 @@ export function App() {
           </div>
         </div>
       </header>
+      <FavChips
+        current={symbol}
+        tick={tapeTick}
+        onPick={(s) => {
+          haptic()
+          setSymbol(s)
+        }}
+      />
       {feed.lastError && status !== 'acik' && (
         <p className="err">Bağlantı: {feed.lastError}</p>
       )}
@@ -161,6 +175,29 @@ export function App() {
                 onClick={() => {
                   setAlertsEnabled(false)
                   setAlertOn(false)
+                }}
+              >
+                Kapalı
+              </button>
+            </div>
+            <p>Veri tasarrufu (likidasyon + radar kapalı)</p>
+            <div className="wins">
+              <button
+                className={saver ? 'on' : ''}
+                onClick={() => {
+                  saveSaver(true)
+                  setSaver(true)
+                  feed.setSaver(true)
+                }}
+              >
+                Açık
+              </button>
+              <button
+                className={!saver ? 'on' : ''}
+                onClick={() => {
+                  saveSaver(false)
+                  setSaver(false)
+                  feed.setSaver(false)
                 }}
               >
                 Kapalı

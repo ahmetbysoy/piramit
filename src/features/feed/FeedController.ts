@@ -6,13 +6,9 @@ import { parseAggTradePayload } from '../../core/market/aggTrade'
 import { parseForceOrder } from '../../core/market/forceOrder'
 import { parseMiniTickerArr, type MiniRow } from '../../core/market/miniTicker'
 import { oiDelta, parseOpenInterest, type OiSnap } from '../../core/market/openInterest'
-import {
-  FORCE_ORDER,
-  MINI_TICKER,
-  OI_URLS,
-  aggTradeStream,
-  marketCombinedUrl,
-} from '../../core/ws/endpoints'
+import { OI_URLS, marketCombinedUrl } from '../../core/ws/endpoints'
+import { streamsFor } from '../../core/ws/streamPlan'
+import { loadSaver } from '../../core/store/dataSaver'
 import { BinanceSocket, type SocketStatus } from '../../core/ws/BinanceSocket'
 import { PrecisionRegistry } from '../../core/format/precision'
 
@@ -31,6 +27,7 @@ export class FeedController {
   private prevOi: OiSnap | null = null
   private wantRadar = false
   private hidden = false
+  private saver = typeof localStorage !== 'undefined' ? loadSaver() : false
 
   constructor() {
     this.engine.setSymbol(this.symbol)
@@ -57,6 +54,16 @@ export class FeedController {
 
   getSymbol(): string {
     return this.symbol
+  }
+
+  setSaver(on: boolean): void {
+    if (this.saver === on) return
+    this.saver = on
+    if (!this.hidden) this.reconnect()
+  }
+
+  isSaver(): boolean {
+    return this.saver
   }
 
   setRadar(on: boolean): void {
@@ -89,9 +96,7 @@ export class FeedController {
   }
 
   private reconnect(): void {
-    const streams = [aggTradeStream(this.symbol), FORCE_ORDER]
-    if (this.wantRadar) streams.push(MINI_TICKER)
-    this.socket.connect(marketCombinedUrl(streams))
+    this.socket.connect(marketCombinedUrl(streamsFor(this.symbol, this.wantRadar, this.saver)))
   }
 
   private route(raw: string): void {
