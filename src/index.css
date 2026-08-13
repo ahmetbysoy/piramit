@@ -33,11 +33,11 @@ body { overscroll-behavior: none; }
 .glow {
   pointer-events: none;
   position: absolute;
-  inset: -40px -20px auto;
-  height: 280px;
+  inset: -8px -8px auto;
+  height: 160px;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(61, 255, 161, 0.12), transparent 50%),
-    radial-gradient(ellipse at 90% 10%, rgba(255, 93, 122, 0.12), transparent 46%);
+    radial-gradient(ellipse at 18% 0%, rgba(61, 255, 161, 0.22), transparent 55%),
+    radial-gradient(ellipse at 88% 8%, rgba(255, 93, 122, 0.2), transparent 52%);
   z-index: 0;
 }
 
@@ -136,10 +136,10 @@ body { overscroll-behavior: none; }
   flex-shrink: 0;
 }
 .favs button {
-  background: rgba(20, 24, 33, 0.7);
+  background: var(--surface-2);
   color: var(--dim);
-  border: 1px solid var(--line);
-  border-radius: 999px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
   padding: 6px 11px;
   font-size: 12px;
   font-weight: 700;
@@ -158,12 +158,21 @@ body { overscroll-behavior: none; }
   position: relative;
   z-index: 1;
 }
-.wins button, .subtabs button, .nav button {
-  background: rgba(20, 24, 33, 0.7);
+.wins button, .subtabs button {
+  background: var(--surface-1);
   color: var(--dim);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 10px 16px;
+  min-height: 44px;
+  font-size: 13px;
+}
+.nav button {
+  background: transparent;
+  color: var(--dim);
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 4px;
   min-height: 44px;
   font-size: 13px;
 }

@@ -54,7 +54,8 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       const rowH = (h - 12 - GAP * (rev.length - 1)) / rev.length
       const cx = w / 2
       hits.current = []
-      ctx.font = '600 12px "DM Sans", system-ui, sans-serif'
+      const face = canvasFace()
+      ctx.font = face
 
       rev.forEach((l, i) => {
         const t = i / Math.max(rev.length - 1, 1)
@@ -63,12 +64,15 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         const mark = empty || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'
         const nameTxt = `${mark} ${l.name}`
         const label = `${net === 'DÜZ' ? 'düz' : net}  ${formatCompactUsd(Math.abs(l.net))}`
-        const needed = ctx.measureText(nameTxt).width + ctx.measureText(label).width + 34
+        const nameW = ctx.measureText(nameTxt).width
+        const labW = ctx.measureText(label).width
+        const needed = nameW + labW + 34
         const volGuess = empty
           ? EMPTY_BASE + t * EMPTY_GROW
           : Math.max(MIN_BAR, (l.share / maxShare) * (w - 8) * taper)
-        const volW = Math.min(w - 8, Math.max(volGuess, needed))
-        const twoLine = volW < needed - 1 && rowH >= 28
+        const twoLine = volGuess < needed && rowH >= 28
+        const minStack = Math.max(nameW, labW) + 20
+        const volW = Math.min(w - 8, Math.max(volGuess, twoLine ? minStack : needed))
         const y = 6 + i * (rowH + GAP)
         hits.current.push({ y0: y, y1: y + rowH, l })
         const x = cx - volW / 2
@@ -106,7 +110,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         ctx.restore()
 
         ctx.fillStyle = ink
-        ctx.font = '600 12px "DM Sans", system-ui, sans-serif'
+        ctx.font = face
         if (twoLine) {
           ctx.textAlign = 'center'
           ctx.fillText(nameTxt, cx, y + rowH / 2 - 4)
@@ -121,6 +125,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       })
     }
 
+    void document.fonts?.ready.then(() => draw())
     draw()
     const ro = new ResizeObserver(() => draw())
     ro.observe(canvas)
@@ -169,6 +174,10 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       </p>
     </div>
   )
+}
+
+function canvasFace(): string {
+  return '600 12px "IBM Plex Mono", "DM Sans", ui-monospace, monospace'
 }
 
 function liteFx(): boolean {
