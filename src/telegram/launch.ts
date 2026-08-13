@@ -7,6 +7,13 @@ export function normalizeLaunchSymbol(raw: string): string | null {
   return `${u}USDT`
 }
 
+export function writeSymbolHash(symbol: string): void {
+  if (typeof window === 'undefined') return
+  const next = `#${symbol}`
+  if (window.location.hash === next) return
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${next}`)
+}
+
 export function symbolFromLocation(search: string, hash: string): string | null {
   const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search).get('s')
   if (q) return normalizeLaunchSymbol(q)

@@ -14,8 +14,8 @@ import { FavChips } from '../features/settings/FavChips'
 import { loadSaver, saveSaver } from '../core/store/dataSaver'
 import { loadPrefs, savePrefs } from '../core/store/prefs'
 import { netWord } from '../ui/moneyTone'
-import { bindBackButton, haptic, telegramStartSymbol } from '../telegram/webApp'
-import { normalizeLaunchSymbol, symbolFromLocation } from '../telegram/launch'
+import { bindBackButton, bindMainButton, haptic, shareTelegram, telegramStartSymbol } from '../telegram/webApp'
+import { normalizeLaunchSymbol, symbolFromLocation, writeSymbolHash } from '../telegram/launch'
 import { watchAlerts } from '../features/alert/watchAlerts'
 import { alertsEnabled, askAlertPermission, setAlertsEnabled } from '../core/alert/localAlert'
 import { SettingCard } from '../ui/SettingCard'
@@ -74,7 +74,17 @@ export function App() {
 
   useEffect(() => {
     savePrefs({ symbol, window: snap.windowSec, edge: snap.edgeMode })
+    writeSymbolHash(symbol)
   }, [symbol, snap.windowSec, snap.edgeMode])
+
+  useEffect(() => {
+    const onHash = () => {
+      const next = symbolFromLocation('', window.location.hash)
+      if (next && next !== symbol) setSymbol(next)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [symbol])
 
   useEffect(() => {
     watchAlerts(prevSnap.current, snap)
@@ -107,6 +117,14 @@ export function App() {
   const topNet = topSlice(snap.layers).reduce((a, l) => a + l.net, 0)
   const sessTop = topSlice(snap.sessionLayers).reduce((a, l) => a + l.net, 0)
   const headline = snap.clashYazi || snap.divYazi || snap.shapeYazi
+  const shareLine = `${symbol} ${priceTxt} — ${headline}`
+
+  useEffect(() => {
+    return bindMainButton('Paylaş', () => {
+      haptic()
+      shareTelegram(shareLine)
+    })
+  }, [shareLine])
 
   return (
     <div className="shell">

@@ -11,6 +11,7 @@ Canlı: https://piramit.vercel.app
 - **Toplama / boşaltma**: tepe vs taban + fiyat (tanh, oturum %’si 0.4’te satüre olmaz). OI varsa dipnot.
 - **Salvo**: 3sn benzer vuruşlar.
 - Radar, favori, yerel alarm, veri tasarrufu Ayar’da.
+- Telegram: `t.me/BOT/app?startapp=ETH` veya `?s=ETH` / `#ETH` ile coin açılır. Geri tuşu önce Piramit’e döner.
 
 ## Veri
 

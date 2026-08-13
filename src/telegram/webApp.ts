@@ -15,6 +15,14 @@ type Tg = {
     onClick: (cb: () => void) => void
     offClick?: (cb: () => void) => void
   }
+  MainButton?: {
+    setText: (t: string) => void
+    show: () => void
+    hide: () => void
+    onClick: (cb: () => void) => void
+    offClick?: (cb: () => void) => void
+  }
+  openTelegramLink?: (url: string) => void
   HapticFeedback?: { impactOccurred: (s: string) => void }
 }
 
@@ -73,6 +81,25 @@ export function bindBackButton(onBack: () => boolean): () => void {
     bb.offClick?.(handler)
     bb.hide()
   }
+}
+
+export function bindMainButton(text: string, onClick: () => void): () => void {
+  const mb = api()?.MainButton
+  if (!mb) return () => undefined
+  mb.setText(text)
+  mb.onClick(onClick)
+  mb.show()
+  return () => {
+    mb.offClick?.(onClick)
+    mb.hide()
+  }
+}
+
+export function shareTelegram(text: string): void {
+  const url = `https://t.me/share/url?url=${encodeURIComponent('https://piramit.vercel.app')}&text=${encodeURIComponent(text)}`
+  const tg = api()
+  if (tg?.openTelegramLink) tg.openTelegramLink(url)
+  else window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 export function haptic(): void {
