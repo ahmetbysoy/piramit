@@ -19,6 +19,9 @@ export const SIGNAL = {
   tersRatio: 1.4,
   klasikRatio: 1.3,
   clashMin: 800,
+  burstMs: 4_000,
+  burstOverlay: 0.15,
+  glowFromLayer: 5,
 } as const
 
 export function sizeScale(medianNotional: number): number {

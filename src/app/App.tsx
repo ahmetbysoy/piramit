@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEngine } from '../bridge/useEngine'
 import { WINDOW_OPTIONS, type WindowSec } from '../core/engine/pyramidEngine'
+import { topSlice } from '../core/engine/layerNames'
 import { formatCompactUsd, windowLabel } from '../core/format/money'
 import { formatPrice } from '../core/format/formatPrice'
 import { FeedController } from '../features/feed/FeedController'
@@ -88,8 +89,8 @@ export function App() {
   const tick = feed.precision.get(symbol)?.tickSize ?? '0.01'
   const priceTxt = formatPrice(snap.priceStr, tick)
 
-  const topNet = snap.layers.slice(4).reduce((a, l) => a + l.net, 0)
-  const sessTop = snap.sessionLayers.slice(4).reduce((a, l) => a + l.net, 0)
+  const topNet = topSlice(snap.layers).reduce((a, l) => a + l.net, 0)
+  const sessTop = topSlice(snap.sessionLayers).reduce((a, l) => a + l.net, 0)
   const headline = snap.clashYazi || snap.divYazi || snap.shapeYazi
 
   return (
@@ -103,7 +104,7 @@ export function App() {
           onPick={pickCoin}
         />
         <div className="px-block">
-          <div className="px">{priceTxt}</div>
+          <div className="px">{listReady ? priceTxt : '···'}</div>
           <div className={snap.changePct >= 0 ? 'chg up' : 'chg dn'}>
             {snap.changePct >= 0 ? '+' : ''}
             {snap.changePct.toFixed(2)}%

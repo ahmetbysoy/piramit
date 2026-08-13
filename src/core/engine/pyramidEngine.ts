@@ -2,7 +2,7 @@
 
 import { parseAggTradePayload, type AggTrade } from '../market/aggTrade'
 import type { Liq } from '../market/forceOrder'
-import { LAYER_NAMES } from './layerNames'
+import { LAYER_NAMES, TOP_LAYER_FROM, BOT_LAYER_TO } from './layerNames'
 import { netDelta, totalCount, totalNotional, type LayerWallet } from './layerWallet'
 import { KEEP_SECONDS, WindowLedger } from './windowLedger'
 import { foldBuckets, layerFromEdges } from './layerMapper'
@@ -103,6 +103,7 @@ export class PyramidEngine {
   private oi: number | null = null
   private oiDelta: number | null = null
   private lastLiq: Liq | null = null
+  private lastJournalKind: DivKind = 'yok'
   private clock: () => number = () => Date.now()
   private cached: PyramidSnapshot = this.buildSnapshot()
 
@@ -154,6 +155,7 @@ export class PyramidEngine {
     this.lastLiq = null
     this.oi = null
     this.oiDelta = null
+    this.lastJournalKind = 'yok'
     this.edges = scaleFixedEdges(0)
     this.dirty = false
     this.emit()
@@ -242,13 +244,13 @@ export class PyramidEngine {
         ? sessionBuckets
         : this.ledger.sumWindow(this.windowSec, now)
     let folded = foldBuckets(winBuckets, this.edges)
-    if (this.lastBurst && now - this.lastBurst.lastMs < 4_000) {
+    if (this.lastBurst && now - this.lastBurst.lastMs < SIGNAL.burstMs) {
       const L = layerFromEdges(this.lastBurst.merged, this.edges)
       if (this.lastBurst.side === 'ALIS') {
-        folded[L].buyNotional += this.lastBurst.merged * 0.15
+        folded[L].buyNotional += this.lastBurst.merged * SIGNAL.burstOverlay
         folded[L].buyCount += 1
       } else {
-        folded[L].sellNotional += this.lastBurst.merged * 0.15
+        folded[L].sellNotional += this.lastBurst.merged * SIGNAL.burstOverlay
         folded[L].sellCount += 1
       }
     }
@@ -259,8 +261,8 @@ export class PyramidEngine {
     const shape = detectShape(layers, scale)
     const w = sides(winBuckets)
     const s = sides(sessionBuckets)
-    const top = layers.slice(4)
-    const bot = layers.slice(0, 3)
+    const top = layers.slice(TOP_LAYER_FROM)
+    const bot = layers.slice(0, BOT_LAYER_TO)
     const topNet = top.reduce((a, l) => a + l.net, 0)
     const botNet = bot.reduce((a, l) => a + l.net, 0)
     const topAbs = top.reduce((a, l) => a + l.buyNotional + l.sellNotional, 0)
@@ -275,17 +277,9 @@ export class PyramidEngine {
       minVol: SIGNAL.divMinVol * scale,
     })
     const shortLayers = toViews(foldBuckets(this.ledger.sumWindow(60, now), this.edges))
-    const shortTop = shortLayers.slice(4).reduce((a, l) => a + l.net, 0)
-    const sessTopNet = sessionLayers.slice(4).reduce((a, l) => a + l.net, 0)
-    const clash = readClash(shortTop, sessTopNet)
-    if (div.kind !== 'yok' && px.price > 0) {
-      this.journal.push({
-        at: now,
-        symbol: this.symbol,
-        kind: div.kind,
-        price: px.price,
-      })
-    }
+    const shortTop = shortLayers.slice(TOP_LAYER_FROM).reduce((a, l) => a + l.net, 0)
+    const sessTopNet = sessionLayers.slice(TOP_LAYER_FROM).reduce((a, l) => a + l.net, 0)
+    const clash = readClash(shortTop, sessTopNet, SIGNAL.clashMin * scale)
     return {
       symbol: this.symbol,
       windowSec: this.windowSec,
@@ -324,7 +318,20 @@ export class PyramidEngine {
 
   private emit(): void {
     this.cached = this.buildSnapshot()
+    this.commitJournal(this.cached)
     const s = this.cached
     for (const fn of this.listeners) fn(s)
+  }
+
+  private commitJournal(s: PyramidSnapshot): void {
+    if (s.divKind !== 'yok' && s.divKind !== this.lastJournalKind && s.price > 0) {
+      this.journal.push({
+        at: this.now(),
+        symbol: this.symbol,
+        kind: s.divKind,
+        price: s.price,
+      })
+    }
+    this.lastJournalKind = s.divKind
   }
 }

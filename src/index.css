@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,500&family=IBM+Plex+Mono:wght@500;600&display=swap');
-
 :root {
   color-scheme: dark;
   --bg: #07090e;
@@ -9,6 +7,7 @@
   --dim: #8b95a8;
   --alis: #3dffa1;
   --satis: #ff5d7a;
+  --gold: #e8c36a;
   --accent: #c9d4ff;
   --safe: env(safe-area-inset-bottom, 0px);
   --nav-h: calc(62px + env(safe-area-inset-bottom, 0px));
@@ -120,7 +119,7 @@ body { overscroll-behavior: none; }
 .sym-row > button:first-child { flex: 1; }
 .sym-row .star {
   width: 36px;
-  color: #e8c36a;
+  color: var(--gold);
   background: transparent;
   border: 0;
   font-size: 16px;
@@ -144,8 +143,8 @@ body { overscroll-behavior: none; }
 }
 .favs button.on {
   color: #0b0d12;
-  background: #e8c36a;
-  border-color: #e8c36a;
+  background: var(--gold);
+  border-color: var(--gold);
 }
 .wins, .subtabs {
   display: flex;
@@ -256,7 +255,7 @@ body { overscroll-behavior: none; }
 .disclaimer {
   text-align: center;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 11px;
   padding: 0 14px 8px;
 }
 
