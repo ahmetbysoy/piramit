@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { oiDelta, parseOpenInterest } from './openInterest'
+import { oiDelta, oiToUsdt, parseOpenInterest } from './openInterest'
 
 describe('openInterest', () => {
   it('parse + delta', () => {
@@ -7,5 +7,10 @@ describe('openInterest', () => {
     const b = parseOpenInterest({ symbol: 'BTCUSDT', openInterest: '12' }, 2)
     expect(a?.oi).toBeCloseTo(10.5)
     expect(oiDelta(a, b!)).toBeCloseTo(1.5)
+  })
+
+  it('OI kontrat → USDT', () => {
+    expect(oiToUsdt(8_520_000, 76.2)).toBeCloseTo(8_520_000 * 76.2)
+    expect(oiToUsdt(8_520_000, 0)).toBeNull()
   })
 })

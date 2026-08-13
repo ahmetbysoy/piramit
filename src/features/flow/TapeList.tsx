@@ -1,5 +1,5 @@
 import type { AggTrade } from '../../core/market/aggTrade'
-import { formatCompactUsd } from '../../core/format/money'
+import { formatUsdt } from '../../core/format/money'
 
 const MAX_VISIBLE = 50
 
@@ -17,7 +17,7 @@ export function TapeList({ trades }: { trades: AggTrade[] }) {
         <div key={`${t.tradeId}-${t.timeMs}`} className={`tick ${t.side === 'ALIS' ? 'alis' : 'satis'}`}>
           <span className="yon">{t.side === 'ALIS' ? '▲ ALIŞ' : '▼ SATIŞ'}</span>
           <span className="px">{t.priceStr}</span>
-          <span className="nt">{formatCompactUsd(t.notional)}</span>
+          <span className="nt">{formatUsdt(t.notional)}</span>
         </div>
       ))}
     </div>

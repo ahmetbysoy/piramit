@@ -2,7 +2,7 @@
 
 import type { PyramidSnapshot } from '../../core/engine/pyramidEngine'
 import { pingAlert } from '../../core/alert/localAlert'
-import { formatCompactUsd } from '../../core/format/money'
+import { formatUsdt } from '../../core/format/money'
 
 export function watchAlerts(prev: PyramidSnapshot | null, next: PyramidSnapshot): void {
   const kraken = next.layers[6]
@@ -12,19 +12,19 @@ export function watchAlerts(prev: PyramidSnapshot | null, next: PyramidSnapshot)
     const nowVol = kraken.buyNotional + kraken.sellNotional
     if (nowVol > wasVol * 1.25 + 1) {
       const yon = kraken.net >= 0 ? 'ALIŞ' : 'SATIŞ'
-      pingAlert(`${next.symbol} Kraken`, `${yon} ${formatCompactUsd(Math.abs(kraken.net))}`)
+      pingAlert(`${next.symbol} Kraken`, `${yon} ${formatUsdt(Math.abs(kraken.net))}`)
     }
   }
   if (next.burst && (!prev?.burst || prev.burst.lastMs !== next.burst.lastMs)) {
     pingAlert(
       `${next.symbol} salvo`,
-      `${next.burst.count} vuruş ≈ ${formatCompactUsd(next.burst.merged)}`,
+      `${next.burst.count} vuruş ≈ ${formatUsdt(next.burst.merged)}`,
     )
   }
   if (next.lastLiq && next.lastLiq.timeMs !== prev?.lastLiq?.timeMs) {
     pingAlert(
       `${next.symbol} likidasyon`,
-      `${next.lastLiq.side} ${formatCompactUsd(next.lastLiq.notional)}`,
+      `${next.lastLiq.side} ${formatUsdt(next.lastLiq.notional)}`,
     )
   }
 }

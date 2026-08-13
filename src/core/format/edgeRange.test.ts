@@ -3,7 +3,7 @@ import { formatEdgeRange } from './edgeRange'
 
 describe('formatEdgeRange', () => {
   it('üst açık', () => {
-    expect(formatEdgeRange(1_000_000, Infinity)).toMatch(/\+$/)
+    expect(formatEdgeRange(1_000_000, Infinity)).toMatch(/\+ USDT$/)
   })
   it('aralık', () => {
     expect(formatEdgeRange(0, 100)).toContain('–')

@@ -4,6 +4,6 @@ import { formatCompactUsd } from './money'
 
 export function formatEdgeRange(lo: number, hi: number): string {
   const a = formatCompactUsd(Math.max(0, lo))
-  if (!Number.isFinite(hi)) return `${a}+`
-  return `${a}–${formatCompactUsd(hi)}`
+  if (!Number.isFinite(hi)) return `${a}+ USDT`
+  return `${a}–${formatCompactUsd(hi)} USDT`
 }

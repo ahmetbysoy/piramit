@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEngine } from '../bridge/useEngine'
 import { WINDOW_OPTIONS, type WindowSec } from '../core/engine/pyramidEngine'
 import { topSlice } from '../core/engine/layerNames'
-import { formatCompactUsd, windowLabel } from '../core/format/money'
+import { formatUsdt, windowLabel } from '../core/format/money'
+import { oiToUsdt } from '../core/market/openInterest'
 import { oiMeta, type OiState } from '../core/engine/oiState'
 import { formatPrice } from '../core/format/formatPrice'
 import { FeedController } from '../features/feed/FeedController'
@@ -290,13 +291,13 @@ export function App() {
               Son {windowLabel(windowSec)}
             </span>
             <b data-testid="win-net" className={toneClass(topNet)}>
-              büyükler {netWord(topNet)} {formatCompactUsd(Math.abs(topNet))}
+              büyükler {netWord(topNet)} {formatUsdt(Math.abs(topNet))}
             </b>
           </div>
           <div>
             <span className="k">Açılıştan</span>
             <b className={toneClass(sessTop)}>
-              büyükler {netWord(sessTop)} {formatCompactUsd(Math.abs(sessTop))}
+              büyükler {netWord(sessTop)} {formatUsdt(Math.abs(sessTop))}
             </b>
           </div>
         </div>
@@ -348,17 +349,20 @@ function metaLine(snap: {
   oi: number | null
   oiDelta: number | null
   oiState: OiState
+  price: number
   lastLiq: { side: string; notional: number } | null
   edgeMode: string
 }): string {
   const bits: string[] = []
   bits.push(snap.edgeMode === 'adaptif' ? 'eşik: adaptif' : 'eşik: sabit')
   if (snap.burst) {
-    bits.push(`salvo ${snap.burst.count} vuruş ≈ ${formatCompactUsd(snap.burst.merged)}`)
+    bits.push(`salvo ${snap.burst.count} vuruş ≈ ${formatUsdt(snap.burst.merged)}`)
   }
-  bits.push(oiMeta(snap.oiState, snap.oi, snap.oiDelta, formatCompactUsd))
+  const oiU = oiToUsdt(snap.oi, snap.price)
+  const dU = oiToUsdt(snap.oiDelta, snap.price)
+  bits.push(oiMeta(snap.oiState, oiU, dU, formatUsdt))
   if (snap.lastLiq) {
-    bits.push(`likidasyon ${snap.lastLiq.side} ${formatCompactUsd(snap.lastLiq.notional)}`)
+    bits.push(`likidasyon ${snap.lastLiq.side} ${formatUsdt(snap.lastLiq.notional)}`)
   }
   return bits.join(' · ')
 }

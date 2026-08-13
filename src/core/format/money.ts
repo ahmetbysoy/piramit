@@ -9,6 +9,11 @@ export function formatCompactUsd(n: number): string {
   return `${sign}${abs.toFixed(2)}`
 }
 
+/** Ekran: her zaman USDT. Adet değil. */
+export function formatUsdt(n: number): string {
+  return `${formatCompactUsd(n)} USDT`
+}
+
 export function formatPriceDisplay(priceStr: string): string {
   if (!priceStr) return '—'
   return priceStr

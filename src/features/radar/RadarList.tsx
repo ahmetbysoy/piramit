@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { MiniRow } from '../../core/market/miniTicker'
-import { formatCompactUsd } from '../../core/format/money'
+import { formatUsdt } from '../../core/format/money'
 
 type Sort = 'pct' | 'vol'
 
@@ -36,7 +36,7 @@ export function RadarList({
         {list.map((r) => (
           <button key={r.symbol} className="radar-row" type="button" onClick={() => onPick(r.symbol)}>
             <b>{r.symbol.replace('USDT', '')}</b>
-            <span className="px">{formatCompactUsd(r.quoteVol)}</span>
+            <span className="px">{formatUsdt(r.quoteVol)}</span>
             <span className={r.changePct >= 0 ? 'alis' : 'satis'}>
               {r.changePct >= 0 ? '+' : ''}
               {r.changePct.toFixed(2)}%

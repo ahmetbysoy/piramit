@@ -6,7 +6,8 @@ Canlı: https://piramit.vercel.app
 
 ## Ne bakıyorsun
 
-- **Katmanlar** (Toz → Kraken): trade notional’ına göre. Varsayılan **adaptif** (yüzdelik). **Sabit** mod BTC tablosunu bu coin’in medyan trade’ine ölçekler — PEPE’de 1M$ Kraken olmaz.
+- **Katmanlar** (Toz → Kraken): **USDT notional** = fiyat × adet. Adet sayılmaz. Varsayılan **adaptif** (yüzdelik). **Sabit** mod BTC tablosunu bu coin’in medyan USDT’sine ölçekler.
+- **OI**: Binance kontrat verir; ekranda `kontrat × fiyat` → USDT. CORS olursa “OI yok” yazar.
 - **1dk vs açılıştan**: kısa/uzun çelişki asıl cümle.
 - **Toplama / boşaltma**: tepe vs taban + fiyat (tanh, oturum %’si 0.4’te satüre olmaz). OI gelmezse (CORS/451) metinde **OI yok** yazar, uydurma yok.
 - **Salvo**: 3sn benzer vuruşlar.

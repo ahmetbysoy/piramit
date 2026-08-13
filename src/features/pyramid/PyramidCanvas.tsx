@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { LayerView } from '../../core/engine/pyramidEngine'
 import { SIGNAL } from '../../core/engine/signalConfig'
-import { formatCompactUsd } from '../../core/format/money'
+import { formatUsdt } from '../../core/format/money'
 import { netWord } from '../../ui/moneyTone'
 
 type Props = {
@@ -43,7 +43,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
                 setTip(
                   tip === l.name
                     ? null
-                    : `${l.name} · ▲ ${formatCompactUsd(l.buyNotional)} · ▼ ${formatCompactUsd(l.sellNotional)}`,
+                    : `${l.name} · ▲ ${formatUsdt(l.buyNotional)} · ▼ ${formatUsdt(l.sellNotional)}`,
                 )
               }
             >
@@ -54,7 +54,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
                 <span className={`py-bar ${mute ? 'bos-bar' : ''}`} data-pulse={glow ? pulse % 3 : 0} />
               </span>
               <span className={`py-net ${tone}`}>
-                {mute || net === 'DÜZ' ? 'düz' : net} {formatCompactUsd(Math.abs(l.net))}
+                {mute || net === 'DÜZ' ? 'düz' : net} {formatUsdt(Math.abs(l.net))}
               </span>
             </button>
           )
@@ -62,8 +62,8 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       </div>
       {tip && <div className="py-tip py-tip-static">{tip}</div>}
       <div className="axis-labels">
-        <span>hacim aralığı: küçük {formatCompactUsd(minN || 0)}</span>
-        <span>büyük {formatCompactUsd(maxN)}</span>
+        <span>hacim (USDT): küçük {formatUsdt(minN || 0)}</span>
+        <span>büyük {formatUsdt(maxN)}</span>
       </div>
     </div>
   )

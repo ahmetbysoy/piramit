@@ -20,4 +20,10 @@ export function oiDelta(prev: OiSnap | null, next: OiSnap): number | null {
   return next.oi - prev.oi
 }
 
+/** fapi openInterest kontrat (adet). USDT = kontrat × mark fiyat. */
+export function oiToUsdt(contracts: number | null, price: number): number | null {
+  if (contracts == null || !Number.isFinite(contracts) || price <= 0) return null
+  return contracts * price
+}
+
 export const OI_URL = 'https://fapi.binance.com/fapi/v1/openInterest'

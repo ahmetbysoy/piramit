@@ -38,4 +38,12 @@ describe('parseAggTradePayload', () => {
     expect(parseAggTradePayload('{')).toBeNull()
     expect(parseAggTradePayload('{"e":"kline"}')).toBeNull()
   })
+
+  it('notional = fiyat × adet (USDT)', () => {
+    const t = parseAggTradePayload(
+      JSON.stringify({ e: 'aggTrade', s: 'SOLUSDT', a: 2, p: '76.20', q: '0.275', m: false, T: 1 }),
+    )
+    expect(t?.qty).toBeCloseTo(0.275)
+    expect(t?.notional).toBeCloseTo(20.955)
+  })
 })
