@@ -35,4 +35,27 @@ describe('divergence', () => {
       }).kind,
     ).toBe('yok')
   })
+  it('OI artınca toplama dipnotu yeni long', () => {
+    const s = scoreDivergence({
+      priceChange: -0.7,
+      topNet: 30_000,
+      botNet: -9_000,
+      topAbs: 30_000,
+      botAbs: 9_000,
+      oiDelta: 12,
+    })
+    expect(s.yazi).toContain('yeni long')
+  })
+
+  it('OI düşünce toplama dipnotu kapanış', () => {
+    const s = scoreDivergence({
+      priceChange: -0.7,
+      topNet: 30_000,
+      botNet: -9_000,
+      topAbs: 30_000,
+      botAbs: 9_000,
+      oiDelta: -5,
+    })
+    expect(s.yazi).toContain('short kapanışı')
+  })
 })

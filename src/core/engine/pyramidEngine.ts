@@ -266,6 +266,7 @@ export class PyramidEngine {
       botNet,
       topAbs,
       botAbs,
+      oiDelta: this.oiDelta,
     })
     if (div.kind !== 'yok' && px.price > 0) {
       this.journal.push({

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEngine } from '../bridge/useEngine'
 import { WINDOW_OPTIONS, type WindowSec } from '../core/engine/pyramidEngine'
 import { formatCompactUsd, windowLabel } from '../core/format/money'
@@ -11,6 +11,8 @@ import { RadarList } from '../features/radar/RadarList'
 import { JournalList } from '../features/divergence/JournalList'
 import { netWord } from '../ui/moneyTone'
 import { haptic } from '../telegram/webApp'
+import { watchAlerts } from '../features/alert/watchAlerts'
+import { alertsEnabled, askAlertPermission, setAlertsEnabled } from '../core/alert/localAlert'
 
 type Tab = 'piramit' | 'akis' | 'radar' | 'ayar'
 
@@ -23,6 +25,8 @@ export function App() {
   const [tapeTick, setTapeTick] = useState(0)
   const [listReady, setListReady] = useState(feed.precision.loaded)
   const [radarTick, setRadarTick] = useState(0)
+  const [alertOn, setAlertOn] = useState(false)
+  const prevSnap = useRef(snap)
 
   useEffect(() => {
     feed.onChange(() => {
@@ -42,6 +46,15 @@ export function App() {
   useEffect(() => {
     feed.setRadar(tab === 'radar')
   }, [feed, tab])
+
+  useEffect(() => {
+    setAlertOn(alertsEnabled())
+  }, [])
+
+  useEffect(() => {
+    watchAlerts(prevSnap.current, snap)
+    prevSnap.current = snap
+  }, [snap])
 
   const windowSec = snap.windowSec
   const setWindow = (w: WindowSec) => {
@@ -133,6 +146,26 @@ export function App() {
               Sinyal defteri: {snap.journalHits.ok}/{snap.journalHits.n || 0} isabet
               (15dk sonra fiyat yönü). Tavsiye değil.
             </p>
+            <p>Yerel alarm (Kraken / salvo / likidasyon)</p>
+            <div className="wins">
+              <button
+                className={alertOn ? 'on' : ''}
+                onClick={() => {
+                  void askAlertPermission().then((ok) => setAlertOn(ok))
+                }}
+              >
+                Alarm açık
+              </button>
+              <button
+                className={!alertOn ? 'on' : ''}
+                onClick={() => {
+                  setAlertsEnabled(false)
+                  setAlertOn(false)
+                }}
+              >
+                Kapalı
+              </button>
+            </div>
             <JournalList rows={snap.journal} />
             <p className="dim">Telegram’da BotFather → Mini App URL: bu site. Arka plana düşünce akış durur.</p>
           </div>
