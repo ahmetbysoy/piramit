@@ -39,8 +39,8 @@ export type PyramidSnapshot = {
 export type EngineListener = (s: PyramidSnapshot) => void
 
 function toViews(wallets: LayerWallet[]): LayerView[] {
-  const vol = wallets.reduce((a, w) => a + totalNotional(w), 0) || 1
-  const cnt = wallets.reduce((a, w) => a + totalCount(w), 0) || 1
+  const vol = wallets.reduce((a, w) => a + totalNotional(w), 0)
+  const cnt = wallets.reduce((a, w) => a + totalCount(w), 0)
   return wallets.map((w, i) => ({
     id: i,
     name: LAYER_NAMES[i],
@@ -49,8 +49,8 @@ function toViews(wallets: LayerWallet[]): LayerView[] {
     buyCount: w.buyCount,
     sellCount: w.sellCount,
     net: netDelta(w),
-    share: totalNotional(w) / vol,
-    countShare: totalCount(w) / cnt,
+    share: vol > 0 ? totalNotional(w) / vol : 0,
+    countShare: cnt > 0 ? totalCount(w) / cnt : 0,
   }))
 }
 
@@ -67,7 +67,6 @@ export class PyramidEngine {
   private cached: PyramidSnapshot = this.buildSnapshot()
 
   setSymbol(symbol: string): void {
-    if (this.symbol === symbol) return
     this.symbol = symbol
     this.reset()
   }
@@ -95,6 +94,7 @@ export class PyramidEngine {
   }
 
   ingestTrade(t: AggTrade): void {
+    if (t.symbol !== this.symbol) return
     this.ledger.ingest(t.notional, t.side, t.timeMs, t.price, t.priceStr)
     this.lastTrade = t
     this.tickCount += 1

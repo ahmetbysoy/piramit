@@ -26,23 +26,28 @@ export function PyramidCanvas({ layers, pulse }: Props) {
     ctx.clearRect(0, 0, w, h)
 
     const rev = [...layers].reverse()
-    const maxShare = Math.max(...rev.map((l) => Math.max(l.share, l.countShare * 0.6)), 0.1)
+    const empty = rev.every((l) => l.share === 0)
+    const maxShare = Math.max(...rev.map((l) => l.share), 0.0001)
     const gap = 6
     const rowH = (h - 12 - gap * (rev.length - 1)) / rev.length
     const cx = w / 2
-    const minW = 92
 
     rev.forEach((l, i) => {
       const t = i / Math.max(rev.length - 1, 1)
       const taper = 0.42 + t * 0.58
-      const volW = Math.max(minW, (l.share / maxShare) * (w - 8) * taper)
+      const volW = empty
+        ? 88 + t * 36
+        : Math.max(72, (l.share / maxShare) * (w - 8) * taper)
       const y = 6 + i * (rowH + gap)
       const x = cx - volW / 2
       const net = netWord(l.net)
       const buyR = l.buyNotional + l.sellNotional > 0 ? l.buyNotional / (l.buyNotional + l.sellNotional) : 0.5
 
       const g = ctx.createLinearGradient(x, y, x + volW, y)
-      if (net === 'ALIŞ') {
+      if (empty) {
+        g.addColorStop(0, '#161b26')
+        g.addColorStop(1, '#1c2230')
+      } else if (net === 'ALIŞ') {
         g.addColorStop(0, '#0c3d2c')
         g.addColorStop(buyR, '#1dbf73')
         g.addColorStop(1, '#5a2230')
@@ -56,7 +61,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       }
 
       ctx.save()
-      if (l.id >= 5) {
+      if (!empty && l.id >= 5) {
         ctx.shadowColor = net === 'ALIŞ' ? '#1dbf7388' : '#ff5d7a66'
         ctx.shadowBlur = 18 + (pulse % 3)
       }

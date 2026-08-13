@@ -31,7 +31,7 @@ export class FeedController {
       },
       onMessage: (raw) => {
         const t = parseAggTradePayload(raw)
-        if (!t) return
+        if (!t || t.symbol !== this.symbol) return
         this.engine.ingestTrade(t)
         this.tape.push(t)
       },
@@ -48,9 +48,10 @@ export class FeedController {
 
   start(symbol = this.symbol): void {
     this.symbol = symbol.toUpperCase()
-    this.engine.setSymbol(this.symbol)
     this.tape.clear()
+    this.engine.setSymbol(this.symbol)
     this.engine.start(20)
+    this.onUi?.()
     void this.precision.load().then(() => this.onUi?.())
     this.socket.connect(marketCombinedUrl([aggTradeStream(this.symbol)]))
   }

@@ -98,7 +98,7 @@ export function App() {
 
       <main className="main glass">
         {tab === 'piramit' ? (
-          <PyramidCanvas layers={snap.layers} pulse={snap.tickCount} />
+          <PyramidCanvas key={symbol} layers={snap.layers} pulse={snap.tickCount} />
         ) : (
           <TapeList trades={feed.tape.newestFirst()} key={tapeTick} />
         )}
