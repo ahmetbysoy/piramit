@@ -117,7 +117,14 @@ export function App() {
         onPick={pickCoin}
       />
       {feed.lastError && status !== 'acik' && (
-        <p className="err">Bağlantı: {feed.lastError}</p>
+        <p className="err">
+          Bağlantı: {feed.lastError}{' '}
+          {status === 'olmedi' && (
+            <button type="button" className="retry" onClick={() => feed.start(symbol)}>
+              Yeniden dene
+            </button>
+          )}
+        </p>
       )}
 
       <div className="wins">
@@ -146,10 +153,13 @@ export function App() {
         title="Dokun, kopyala"
         onClick={() => {
           const txt = `${symbol} ${priceTxt} — ${headline}`
-          void navigator.clipboard?.writeText(txt).then(() => {
-            setCopied(true)
-            window.setTimeout(() => setCopied(false), 1400)
-          })
+          void navigator.clipboard?.writeText(txt).then(
+            () => {
+              setCopied(true)
+              window.setTimeout(() => setCopied(false), 1400)
+            },
+            () => setCopied(false),
+          )
         }}
       >
         {copied ? 'Kopyalandı.' : headline}
@@ -211,6 +221,7 @@ export function App() {
                 onClick={() => {
                   saveSaver(true)
                   setSaver(true)
+                  document.documentElement.classList.add('lite')
                   feed.setSaver(true)
                 }}
               >
@@ -221,6 +232,7 @@ export function App() {
                 onClick={() => {
                   saveSaver(false)
                   setSaver(false)
+                  document.documentElement.classList.remove('lite')
                   feed.setSaver(false)
                 }}
               >

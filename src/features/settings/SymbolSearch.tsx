@@ -28,11 +28,15 @@ export function SymbolSearch({ registry, value, onPick, ready }: Props) {
   }, [ready, registry, q, open, favs])
 
   useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
+    const onDoc = (e: Event) => {
       if (!box.current?.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
+    document.addEventListener('touchstart', onDoc)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('touchstart', onDoc)
+    }
   }, [])
 
   const pick = (s: string) => {

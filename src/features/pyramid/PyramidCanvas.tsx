@@ -87,7 +87,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         }
 
         ctx.save()
-        if (!empty && l.id >= SIGNAL.glowFromLayer) {
+        if (!empty && l.id >= SIGNAL.glowFromLayer && !liteFx()) {
           ctx.shadowColor = net === 'ALIŞ' ? alis : satis
           ctx.shadowBlur = 18 + (pulse % 3)
         }
@@ -124,7 +124,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       <canvas
         ref={ref}
         className="py-canvas"
-        aria-label="Katman piramidi, ALIŞ yukarı SATIŞ aşağı"
+        aria-hidden="true"
         onMouseMove={(e) => {
           const box = ref.current?.getBoundingClientRect()
           if (!box) return
@@ -152,8 +152,17 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         <span>küçük {formatCompactUsd(minN || 0)}</span>
         <span>büyük {formatCompactUsd(maxN)}</span>
       </div>
+      <p className="sr-only">
+        {layers.map((l) => `${l.name}: ${netWord(l.net)} ${formatCompactUsd(Math.abs(l.net))}`).join(', ')}
+      </p>
     </div>
   )
+}
+
+function liteFx(): boolean {
+  if (typeof document === 'undefined') return false
+  if (document.documentElement.classList.contains('lite')) return true
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 }
 
 function roundRect(
