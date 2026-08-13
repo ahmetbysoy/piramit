@@ -54,17 +54,24 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       const rowH = (h - 12 - GAP * (rev.length - 1)) / rev.length
       const cx = w / 2
       hits.current = []
+      ctx.font = '600 12px "DM Sans", system-ui, sans-serif'
 
       rev.forEach((l, i) => {
         const t = i / Math.max(rev.length - 1, 1)
         const taper = TAPER_MIN + t * TAPER_SPAN
-        const volW = empty
+        const net = netWord(l.net)
+        const mark = empty || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'
+        const nameTxt = `${mark} ${l.name}`
+        const label = `${net === 'DÜZ' ? 'düz' : net}  ${formatCompactUsd(Math.abs(l.net))}`
+        const needed = ctx.measureText(nameTxt).width + ctx.measureText(label).width + 34
+        const volGuess = empty
           ? EMPTY_BASE + t * EMPTY_GROW
           : Math.max(MIN_BAR, (l.share / maxShare) * (w - 8) * taper)
+        const volW = Math.min(w - 8, Math.max(volGuess, needed))
+        const twoLine = volW < needed - 1 && rowH >= 28
         const y = 6 + i * (rowH + GAP)
         hits.current.push({ y0: y, y1: y + rowH, l })
         const x = cx - volW / 2
-        const net = netWord(l.net)
         const buyR =
           l.buyNotional + l.sellNotional > 0
             ? l.buyNotional / (l.buyNotional + l.sellNotional)
@@ -98,15 +105,19 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         ctx.fill()
         ctx.restore()
 
-        const midY = y + rowH / 2 + 4
         ctx.fillStyle = ink
-        ctx.font = '600 12px "DM Sans", system-ui'
-        ctx.textAlign = 'left'
-        const mark = empty || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'
-        ctx.fillText(`${mark} ${l.name}`, x + 10, midY)
-        ctx.textAlign = 'right'
-        const label = `${net === 'DÜZ' ? 'düz' : net}  ${formatCompactUsd(Math.abs(l.net))}`
-        ctx.fillText(label, x + volW - 10, midY)
+        ctx.font = '600 12px "DM Sans", system-ui, sans-serif'
+        if (twoLine) {
+          ctx.textAlign = 'center'
+          ctx.fillText(nameTxt, cx, y + rowH / 2 - 4)
+          ctx.fillText(label, cx, y + rowH / 2 + 11)
+        } else {
+          const midY = y + rowH / 2 + 4
+          ctx.textAlign = 'left'
+          ctx.fillText(nameTxt, x + 10, midY)
+          ctx.textAlign = 'right'
+          ctx.fillText(label, x + volW - 10, midY)
+        }
       })
     }
 
@@ -150,7 +161,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         </div>
       )}
       <div className="axis-labels">
-        <span>küçük {formatCompactUsd(minN || 0)}</span>
+        <span>hacim aralığı: küçük {formatCompactUsd(minN || 0)}</span>
         <span>büyük {formatCompactUsd(maxN)}</span>
       </div>
       <p className="sr-only">
