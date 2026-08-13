@@ -52,6 +52,7 @@ export type PyramidSnapshot = {
   oiDelta: number | null
   lastLiq: Liq | null
   journalHits: { n: number; ok: number }
+  journal: { id: string; kind: string; symbol: string; price: number; at: number; later15: number | null }[]
 }
 
 export type EngineListener = (s: PyramidSnapshot) => void
@@ -298,6 +299,14 @@ export class PyramidEngine {
       oiDelta: this.oiDelta,
       lastLiq: this.lastLiq,
       journalHits: this.journal.hitRate(),
+      journal: this.journal.list().slice(0, 12).map((r) => ({
+        id: r.id,
+        kind: r.kind,
+        symbol: r.symbol,
+        price: r.price,
+        at: r.at,
+        later15: r.later15,
+      })),
     }
   }
 

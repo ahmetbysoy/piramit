@@ -8,6 +8,7 @@ import { PyramidCanvas } from '../features/pyramid/PyramidCanvas'
 import { TapeList } from '../features/flow/TapeList'
 import { SymbolSearch } from '../features/settings/SymbolSearch'
 import { RadarList } from '../features/radar/RadarList'
+import { JournalList } from '../features/divergence/JournalList'
 import { netWord } from '../ui/moneyTone'
 import { haptic } from '../telegram/webApp'
 
@@ -132,7 +133,8 @@ export function App() {
               Sinyal defteri: {snap.journalHits.ok}/{snap.journalHits.n || 0} isabet
               (15dk sonra fiyat yönü). Tavsiye değil.
             </p>
-            <p className="dim">Telegram’da BotFather → Mini App URL: bu site.</p>
+            <JournalList rows={snap.journal} />
+            <p className="dim">Telegram’da BotFather → Mini App URL: bu site. Arka plana düşünce akış durur.</p>
           </div>
         )}
       </main>

@@ -247,3 +247,13 @@ body { overscroll-behavior: none; }
 .ayar { padding: 8px 10px 16px; }
 .ayar p { margin: 8px 0; }
 .ayar .dim { color: var(--dim); font-size: 13px; line-height: 1.4; }
+.journal { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow: auto; }
+.journal-row {
+  display: grid;
+  grid-template-columns: 78px 1fr auto auto;
+  gap: 8px;
+  font-size: 12px;
+  padding: 8px 10px;
+  background: rgba(12,14,20,0.6);
+  border-radius: 8px;
+}

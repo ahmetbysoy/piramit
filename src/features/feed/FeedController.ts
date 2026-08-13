@@ -5,10 +5,11 @@ import { TapeBuffer } from '../../core/store/tapeBuffer'
 import { parseAggTradePayload } from '../../core/market/aggTrade'
 import { parseForceOrder } from '../../core/market/forceOrder'
 import { parseMiniTickerArr, type MiniRow } from '../../core/market/miniTicker'
-import { OI_URL, oiDelta, parseOpenInterest, type OiSnap } from '../../core/market/openInterest'
+import { oiDelta, parseOpenInterest, type OiSnap } from '../../core/market/openInterest'
 import {
   FORCE_ORDER,
   MINI_TICKER,
+  OI_URLS,
   aggTradeStream,
   marketCombinedUrl,
 } from '../../core/ws/endpoints'
@@ -29,9 +30,13 @@ export class FeedController {
   private oiTimer = 0
   private prevOi: OiSnap | null = null
   private wantRadar = false
+  private hidden = false
 
   constructor() {
     this.engine.setSymbol(this.symbol)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => this.onVis())
+    }
     this.socket.setHandlers({
       onStatus: (s) => {
         this.status = s
@@ -55,8 +60,9 @@ export class FeedController {
   }
 
   setRadar(on: boolean): void {
+    if (this.wantRadar === on) return
     this.wantRadar = on
-    this.reconnect()
+    if (!this.hidden) this.reconnect()
   }
 
   start(symbol = this.symbol): void {
@@ -118,17 +124,26 @@ export class FeedController {
     }
   }
 
+  private onVis(): void {
+    this.hidden = document.visibilityState === 'hidden'
+    if (this.hidden) this.socket.disconnect()
+    else this.reconnect()
+  }
+
   private async pollOi(): Promise<void> {
-    try {
-      const res = await fetch(`${OI_URL}?symbol=${this.symbol}`)
-      if (!res.ok) return
-      const snap = parseOpenInterest(await res.json())
-      if (!snap || snap.symbol !== this.symbol) return
-      const d = oiDelta(this.prevOi, snap)
-      this.prevOi = snap
-      this.engine.setOi(snap.oi, d)
-    } catch {
-      /* CORS / 451 */
+    for (const base of OI_URLS) {
+      try {
+        const res = await fetch(`${base}?symbol=${this.symbol}`)
+        if (!res.ok) continue
+        const snap = parseOpenInterest(await res.json())
+        if (!snap || snap.symbol !== this.symbol) continue
+        const d = oiDelta(this.prevOi, snap)
+        this.prevOi = snap
+        this.engine.setOi(snap.oi, d)
+        return
+      } catch {
+        /* CORS / 451 */
+      }
     }
   }
 }

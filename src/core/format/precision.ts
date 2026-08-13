@@ -1,6 +1,6 @@
 /** Tek sorumluluk: exchangeInfo → tickSize + açık futures listesi. */
 
-import { EXCHANGE_INFO_URL } from '../ws/endpoints'
+import { EXCHANGE_INFO_URLS } from '../ws/endpoints'
 
 export type SymbolMeta = {
   symbol: string
@@ -48,42 +48,53 @@ export class PrecisionRegistry {
   }
 
   async load(): Promise<void> {
-    try {
-      const res = await fetch(EXCHANGE_INFO_URL)
-      if (!res.ok) throw new Error(`exchangeInfo ${res.status}`)
-      const json = (await res.json()) as {
-        symbols?: Array<{
-          symbol: string
-          status?: string
-          contractType?: string
-          baseAsset?: string
-          quoteAsset?: string
-          filters?: Array<{ filterType: string; tickSize?: string; stepSize?: string }>
-        }>
-      }
-      this.map.clear()
-      this.list = []
-      for (const s of json.symbols ?? []) {
-        if (s.status !== 'TRADING') continue
-        if (s.contractType && s.contractType !== 'PERPETUAL') continue
-        if (s.quoteAsset && s.quoteAsset !== 'USDT' && s.quoteAsset !== 'USDC') continue
-        const pf = s.filters?.find((f) => f.filterType === 'PRICE_FILTER')
-        const lf = s.filters?.find((f) => f.filterType === 'LOT_SIZE')
-        const meta: SymbolMeta = {
-          symbol: s.symbol,
-          base: s.baseAsset ?? s.symbol.replace(/USDT|USDC$/, ''),
-          tickSize: pf?.tickSize ?? '0.01',
-          stepSize: lf?.stepSize ?? '0.001',
+    let lastErr = 'exchangeInfo alınamadı'
+    for (const url of EXCHANGE_INFO_URLS) {
+      try {
+        const res = await fetch(url)
+        if (!res.ok) {
+          lastErr = `exchangeInfo ${res.status}`
+          continue
         }
-        this.map.set(s.symbol, meta)
-        this.list.push(meta)
+        this.ingest(await res.json())
+        this.loaded = true
+        this.error = null
+        return
+      } catch (e) {
+        lastErr = e instanceof Error ? e.message : lastErr
       }
-      this.list.sort((a, b) => a.symbol.localeCompare(b.symbol))
-      this.loaded = true
-      this.error = null
-    } catch (e) {
-      this.error = e instanceof Error ? e.message : 'exchangeInfo alınamadı'
     }
+    this.error = lastErr
+  }
+
+  private ingest(json: {
+    symbols?: Array<{
+      symbol: string
+      status?: string
+      contractType?: string
+      baseAsset?: string
+      quoteAsset?: string
+      filters?: Array<{ filterType: string; tickSize?: string; stepSize?: string }>
+    }>
+  }): void {
+    this.map.clear()
+    this.list = []
+    for (const s of json.symbols ?? []) {
+      if (s.status !== 'TRADING') continue
+      if (s.contractType && s.contractType !== 'PERPETUAL') continue
+      if (s.quoteAsset && s.quoteAsset !== 'USDT' && s.quoteAsset !== 'USDC') continue
+      const pf = s.filters?.find((f) => f.filterType === 'PRICE_FILTER')
+      const lf = s.filters?.find((f) => f.filterType === 'LOT_SIZE')
+      const meta: SymbolMeta = {
+        symbol: s.symbol,
+        base: s.baseAsset ?? s.symbol.replace(/USDT|USDC$/, ''),
+        tickSize: pf?.tickSize ?? '0.01',
+        stepSize: lf?.stepSize ?? '0.001',
+      }
+      this.map.set(s.symbol, meta)
+      this.list.push(meta)
+    }
+    this.list.sort((a, b) => a.symbol.localeCompare(b.symbol))
   }
 }
 
