@@ -173,6 +173,7 @@ body { overscroll-behavior: none; }
 
 .err { margin: 0 14px 8px; color: var(--satis); font-size: 12px; }
 .headline {
+  cursor: pointer;
   margin: 2px 16px 4px;
   font-size: 16px;
   line-height: 1.3;

@@ -11,6 +11,7 @@ import { RadarList } from '../features/radar/RadarList'
 import { JournalList } from '../features/divergence/JournalList'
 import { FavChips } from '../features/settings/FavChips'
 import { loadSaver, saveSaver } from '../core/store/dataSaver'
+import { loadPrefs, savePrefs } from '../core/store/prefs'
 import { netWord } from '../ui/moneyTone'
 import { haptic } from '../telegram/webApp'
 import { watchAlerts } from '../features/alert/watchAlerts'
@@ -20,16 +21,19 @@ type Tab = 'piramit' | 'akis' | 'radar' | 'ayar'
 
 export function App() {
   const feed = useMemo(() => new FeedController(), [])
+  const prefs = useMemo(() => loadPrefs(), [])
   const snap = useEngine(feed.engine)
   const [tab, setTab] = useState<Tab>('piramit')
   const [status, setStatus] = useState(feed.status)
-  const [symbol, setSymbol] = useState(feed.getSymbol())
+  const [symbol, setSymbol] = useState(prefs.symbol)
   const [tapeTick, setTapeTick] = useState(0)
   const [listReady, setListReady] = useState(feed.precision.loaded)
   const [radarTick, setRadarTick] = useState(0)
   const [alertOn, setAlertOn] = useState(false)
   const [saver, setSaver] = useState(false)
+  const [copied, setCopied] = useState(false)
   const prevSnap = useRef(snap)
+  const boot = useRef(false)
 
   useEffect(() => {
     feed.onChange(() => {
@@ -55,7 +59,16 @@ export function App() {
     const on = loadSaver()
     setSaver(on)
     feed.setSaver(on)
-  }, [feed])
+    if (!boot.current) {
+      boot.current = true
+      feed.engine.setWindow(prefs.window)
+      feed.engine.setEdgeMode(prefs.edge)
+    }
+  }, [feed, prefs])
+
+  useEffect(() => {
+    savePrefs({ symbol, window: snap.windowSec, edge: snap.edgeMode })
+  }, [symbol, snap.windowSec, snap.edgeMode])
 
   useEffect(() => {
     watchAlerts(prevSnap.current, snap)
@@ -66,6 +79,11 @@ export function App() {
   const setWindow = (w: WindowSec) => {
     haptic()
     feed.engine.setWindow(w)
+  }
+  const pickCoin = (s: string) => {
+    haptic()
+    setSymbol(s)
+    setTab('piramit')
   }
   const tick = feed.precision.get(symbol)?.tickSize ?? '0.01'
   const priceTxt = formatPrice(snap.priceStr, tick)
@@ -82,10 +100,7 @@ export function App() {
           registry={feed.precision}
           value={symbol}
           ready={listReady}
-          onPick={(s) => {
-            haptic()
-            setSymbol(s)
-          }}
+          onPick={pickCoin}
         />
         <div className="px-block">
           <div className="px">{priceTxt}</div>
@@ -99,10 +114,7 @@ export function App() {
       <FavChips
         current={symbol}
         tick={tapeTick}
-        onPick={(s) => {
-          haptic()
-          setSymbol(s)
-        }}
+        onPick={pickCoin}
       />
       {feed.lastError && status !== 'acik' && (
         <p className="err">Bağlantı: {feed.lastError}</p>
@@ -128,7 +140,20 @@ export function App() {
         </button>
       </div>
 
-      <p className="headline">{headline}</p>
+      <p
+        className="headline"
+        data-testid="headline"
+        title="Dokun, kopyala"
+        onClick={() => {
+          const txt = `${symbol} ${priceTxt} — ${headline}`
+          void navigator.clipboard?.writeText(txt).then(() => {
+            setCopied(true)
+            window.setTimeout(() => setCopied(false), 1400)
+          })
+        }}
+      >
+        {copied ? 'Kopyalandı.' : headline}
+      </p>
       <p className="headline sub">{metaLine(snap)}</p>
 
       <main className="main glass">
@@ -137,7 +162,7 @@ export function App() {
         )}
         {tab === 'akis' && <TapeList trades={feed.tape.newestFirst()} key={tapeTick} />}
         {tab === 'radar' && (
-          <RadarList key={radarTick} rows={feed.radar} onPick={setSymbol} />
+          <RadarList key={radarTick} rows={feed.radar} onPick={pickCoin} />
         )}
         {tab === 'ayar' && (
           <div className="ayar">
