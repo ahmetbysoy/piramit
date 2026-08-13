@@ -11,6 +11,7 @@
   --satis: #ff5d7a;
   --accent: #c9d4ff;
   --safe: env(safe-area-inset-bottom, 0px);
+  --nav-h: calc(62px + env(safe-area-inset-bottom, 0px));
   font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -22,10 +23,10 @@ body { overscroll-behavior: none; }
   position: relative;
   max-width: 460px;
   margin: 0 auto;
-  min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(78px + var(--safe));
+  padding-bottom: calc(var(--nav-h) + 12px);
 }
 .glow {
   pointer-events: none;
@@ -37,11 +38,12 @@ body { overscroll-behavior: none; }
     radial-gradient(ellipse at 90% 10%, rgba(255, 93, 122, 0.12), transparent 46%);
   z-index: 0;
 }
-.shell > *:not(.glow) { position: relative; z-index: 1; }
 
 .top {
+  position: relative;
+  z-index: 40;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
   padding: 16px 14px 10px;
@@ -120,6 +122,9 @@ body { overscroll-behavior: none; }
   gap: 6px;
   padding: 0 14px 8px;
   overflow-x: auto;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 .wins button, .subtabs button, .nav button {
   background: rgba(20, 24, 33, 0.7);
@@ -145,9 +150,15 @@ body { overscroll-behavior: none; }
   letter-spacing: -0.02em;
 }
 .headline.sub { font-weight: 500; color: var(--dim); font-size: 13px; margin-bottom: 10px; }
-.py-canvas { width: 100%; height: 380px; display: block; }
+.py-canvas { width: 100%; height: min(340px, 46dvh); display: block; }
 
-.main { flex: 1; padding: 0 10px; }
+.main {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
 .main.glass {
   margin: 0 10px;
   padding: 8px 6px;
@@ -156,7 +167,7 @@ body { overscroll-behavior: none; }
   border: 1px solid var(--line);
 }
 
-.tape { display: flex; flex-direction: column; gap: 4px; max-height: 380px; overflow: auto; }
+.tape { display: flex; flex-direction: column; gap: 4px; max-height: min(340px, 46dvh); overflow: auto; }
 .tick {
   display: grid;
   grid-template-columns: 56px 1fr 72px;
@@ -176,13 +187,16 @@ body { overscroll-behavior: none; }
 .bos { color: var(--dim); padding: 24px 0; text-align: center; }
 
 .foot-card {
-  margin: 12px 14px;
+  margin: 12px 14px 8px;
   padding: 14px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   backdrop-filter: blur(12px);
   font-size: 13px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .k { display: block; color: var(--dim); font-size: 11px; margin-bottom: 3px; }

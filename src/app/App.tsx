@@ -120,9 +120,10 @@ export function App() {
           </div>
         </div>
         <div className="ticks">{snap.tickCount.toLocaleString('tr-TR')} işlem · {statusLabel(status)}</div>
+        <p className="disclaimer">Bu tavsiye değil. Sadece borsadan gelen alış-satış sayımı.</p>
       </section>
 
-      <nav className="nav">
+      <nav className="nav" aria-label="Ana menü">
         <button className={tab === 'piramit' ? 'on' : ''} onClick={() => setTab('piramit')}>
           Piramit
         </button>
@@ -132,8 +133,6 @@ export function App() {
         <button disabled>Radar</button>
         <button disabled>Ayar</button>
       </nav>
-
-      <p className="disclaimer">Bu tavsiye değil. Sadece borsadan gelen alış-satış sayımı.</p>
     </div>
   )
 }
