@@ -206,6 +206,72 @@ body { overscroll-behavior: none; }
   padding: 4px 10px;
 }
 .py-wrap { position: relative; }
+.py-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: min(320px, 44dvh);
+}
+.py-row {
+  display: grid;
+  grid-template-columns: 7.2rem minmax(48px, 1fr) 6.4rem;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 2px;
+  background: transparent;
+  border: 0;
+  color: var(--txt);
+  text-align: left;
+}
+.py-name {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.py-net {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.py-net.alis, .py-row.alis .py-name { color: var(--alis); }
+.py-net.satis, .py-row.satis .py-name { color: var(--satis); }
+.py-net.duz, .py-row.duz .py-name { color: var(--dim); }
+.py-track {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+.py-bar {
+  display: block;
+  width: var(--bar, 40%);
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--alis) 0%,
+    var(--alis) var(--buy, 50%),
+    var(--satis) var(--buy, 50%),
+    var(--satis) 100%
+  );
+  opacity: 0.92;
+}
+.py-bar.bos-bar {
+  background: var(--card);
+  opacity: 0.55;
+}
+.py-row.glow-row .py-bar {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--alis) 35%, transparent);
+}
+.py-row.glow-row.satis .py-bar {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--satis) 40%, transparent);
+}
 .py-tip {
   position: absolute;
   z-index: 5;
@@ -217,6 +283,13 @@ body { overscroll-behavior: none; }
   padding: 6px 8px;
   font-size: 11px;
   max-width: 240px;
+}
+.py-tip-static {
+  position: relative;
+  left: auto;
+  top: auto;
+  margin: 8px 4px 0;
+  pointer-events: none;
 }
 .axis-labels {
   display: flex;
@@ -398,24 +471,25 @@ body { overscroll-behavior: none; }
 .journal { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow: auto; }
 .legend {
   list-style: none;
-  margin: 8px 4px 4px;
+  margin: 6px 2px 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-x: auto;
 }
 .legend li {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 5px 8px;
-  min-width: 72px;
+  gap: 0;
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  min-width: 0;
+  flex: 0 0 auto;
 }
-.legend b { font-size: 11px; font-weight: 700; }
-.legend span { font-size: 10px; color: var(--dim); font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+.legend b { font-size: 10px; font-weight: 700; }
+.legend span { font-size: 9px; color: var(--dim); font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 .journal-row {
   display: grid;
   grid-template-columns: 78px 1fr auto auto;
