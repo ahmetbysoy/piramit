@@ -31,8 +31,12 @@ export function parseForceOrder(raw: string): Liq | null {
   if (!msg || typeof msg !== 'object') return null
   const rec = msg as { data?: Raw; e?: string; o?: Raw['o'] }
   const d: Raw = rec.data && typeof rec.data === 'object' ? rec.data : (rec as Raw)
-  if (d.e !== 'forceOrder' || !d.o) return null
-  const o = d.o
+  return forceOrderFromObj(d)
+}
+
+export function forceOrderFromObj(d: Raw | Record<string, unknown>): Liq | null {
+  if (d.e !== 'forceOrder' || !d.o || typeof d.o !== 'object') return null
+  const o = d.o as NonNullable<Raw['o']>
   if (!o.s || !o.p || !o.q) return null
   const price = Number(o.ap || o.p)
   const qty = Number(o.q)

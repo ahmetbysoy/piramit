@@ -7,11 +7,12 @@ import { netDelta, totalCount, totalNotional, type LayerWallet } from './layerWa
 import { KEEP_SECONDS, WindowLedger } from './windowLedger'
 import { foldBuckets, layerFromEdges } from './layerMapper'
 import { detectShape, type ShapeId } from './morphology'
-import { edgesFromHistogram, fixedEdges } from './adaptiveEdges'
+import { edgesFromHistogram, medianFromHistogram, scaleFixedEdges } from './adaptiveEdges'
 import { BurstDetector, type BurstHit } from './burstDetector'
 import { scoreDivergence, type DivKind } from './divergence'
 import { SignalJournal } from './signalJournal'
 import { readClash } from './windowClash'
+import { SIGNAL, sizeScale } from './signalConfig'
 
 export const WINDOW_OPTIONS = [60, 300, 900, 3600] as const
 export type WindowSec = (typeof WINDOW_OPTIONS)[number] | 'oturum'
@@ -97,7 +98,7 @@ export class PyramidEngine {
   private flushTimer = 0
   private dirty = false
   private edgeMode: EdgeMode = 'adaptif'
-  private edges = fixedEdges()
+  private edges = scaleFixedEdges(0)
   private lastBurst: BurstHit | null = null
   private oi: number | null = null
   private oiDelta: number | null = null
@@ -119,7 +120,7 @@ export class PyramidEngine {
 
   setEdgeMode(m: EdgeMode): void {
     this.edgeMode = m
-    this.edges = fixedEdges()
+    this.edges = scaleFixedEdges(0)
     this.emit()
   }
 
@@ -153,7 +154,7 @@ export class PyramidEngine {
     this.lastLiq = null
     this.oi = null
     this.oiDelta = null
-    this.edges = fixedEdges()
+    this.edges = scaleFixedEdges(0)
     this.dirty = false
     this.emit()
   }
@@ -229,10 +230,12 @@ export class PyramidEngine {
   private buildSnapshot(): PyramidSnapshot {
     const now = this.now()
     const sessionBuckets = this.ledger.sessionBuckets()
+    const med = medianFromHistogram(sessionBuckets)
+    const scale = sizeScale(med || 0)
     if (this.edgeMode === 'adaptif') {
       this.edges = edgesFromHistogram(sessionBuckets, this.edges)
     } else {
-      this.edges = fixedEdges()
+      this.edges = scaleFixedEdges(med || 0)
     }
     const winBuckets =
       this.windowSec === 'oturum'
@@ -253,7 +256,7 @@ export class PyramidEngine {
     const sessionLayers = toViews(foldBuckets(sessionBuckets, this.edges))
     const px = this.ledger.lastPriceInfo()
     const changePct = px.open > 0 ? ((px.price - px.open) / px.open) * 100 : 0
-    const shape = detectShape(layers)
+    const shape = detectShape(layers, scale)
     const w = sides(winBuckets)
     const s = sides(sessionBuckets)
     const top = layers.slice(4)
@@ -269,6 +272,7 @@ export class PyramidEngine {
       topAbs,
       botAbs,
       oiDelta: this.oiDelta,
+      minVol: SIGNAL.divMinVol * scale,
     })
     const shortLayers = toViews(foldBuckets(this.ledger.sumWindow(60, now), this.edges))
     const shortTop = shortLayers.slice(4).reduce((a, l) => a + l.net, 0)

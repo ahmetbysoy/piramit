@@ -43,6 +43,10 @@ export function parseAggTradePayload(raw: string): AggTrade | null {
   if (!msg || typeof msg !== 'object') return null
   const rec = msg as { data?: RawAgg; e?: string }
   const d: RawAgg = rec.data && typeof rec.data === 'object' ? rec.data : (rec as RawAgg)
+  return aggTradeFromObj(d)
+}
+
+export function aggTradeFromObj(d: RawAgg | Record<string, unknown>): AggTrade | null {
   if (d.e !== 'aggTrade') return null
   if (typeof d.p !== 'string' || typeof d.q !== 'string') return null
   if (typeof d.m !== 'boolean' || typeof d.s !== 'string') return null

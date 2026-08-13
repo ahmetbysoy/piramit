@@ -1,5 +1,7 @@
 /** Tek sorumluluk: tepe/taban vs fiyat → ölçülebilir etiket. OI sadece dipnot. */
 
+import { SIGNAL } from './signalConfig'
+
 export type DivKind = 'toplama' | 'bosaltma' | 'yok'
 
 export type DivSignal = {
@@ -15,25 +17,27 @@ export function scoreDivergence(input: {
   topAbs: number
   botAbs: number
   oiDelta?: number | null
+  minVol?: number
 }): DivSignal {
   const { priceChange, topNet, botNet, topAbs, botAbs, oiDelta } = input
-  if (topAbs + botAbs < 500) {
+  const minVol = input.minVol ?? SIGNAL.divMinVol
+  if (topAbs + botAbs < minVol) {
     return { kind: 'yok', score: 0, yazi: '' }
   }
   const top = topAbs > 0 ? topNet / topAbs : 0
   const bot = botAbs > 0 ? botNet / botAbs : 0
-  const px = Math.max(-1, Math.min(1, priceChange / 0.4))
+  const px = Math.tanh(priceChange / SIGNAL.pxTau)
 
   const bosaltma = Math.max(0, px) * Math.max(0, -top) * Math.max(0, bot)
   const toplama = Math.max(0, -px) * Math.max(0, top) * Math.max(0, -bot)
-  if (bosaltma >= 0.12 && bosaltma >= toplama) {
+  if (bosaltma >= SIGNAL.divScore && bosaltma >= toplama) {
     return {
       kind: 'bosaltma',
       score: bosaltma,
       yazi: `Küçükler kovalıyor, büyükler SATIŞ — boşaltma.${oiNote(oiDelta, 'bosaltma')}`,
     }
   }
-  if (toplama >= 0.12) {
+  if (toplama >= SIGNAL.divScore) {
     return {
       kind: 'toplama',
       score: toplama,

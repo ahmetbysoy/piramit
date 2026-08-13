@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { emptyWallet, type LayerWallet } from './layerWallet'
 import { bucketCount } from './microBuckets'
-import { edgesFromHistogram, fixedEdges } from './adaptiveEdges'
+import { edgesFromHistogram, fixedEdges, scaleFixedEdges } from './adaptiveEdges'
 import { notionalToBucket } from './microBuckets'
 
 function hist(sizes: number[]): LayerWallet[] {
@@ -28,6 +28,10 @@ describe('adaptif eşik', () => {
     expect(pe[6]).toBeLessThan(be[6])
     expect(pe[6]).toBeLessThan(50_000)
     expect(be[6]).toBeGreaterThan(100_000)
+  })
+
+  it('sabit eşik PEPE ölçeğinde küçülür', () => {
+    expect(scaleFixedEdges(80)[6]).toBeLessThan(scaleFixedEdges(8_000)[6])
   })
 
   it('histerezis küçük kaymayı yutar', () => {

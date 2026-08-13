@@ -1,32 +1,33 @@
-# React + TypeScript + Vite
+# Piramit
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Binance USD-M futures **agresyon haritası**. Fiyat değil; taker alış/satış büyüklük katmanları.
 
-Currently, two official plugins are available:
+Canlı: https://piramit.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Ne bakıyorsun
 
-## React Compiler
+- **Katmanlar** (Toz → Kraken): trade notional’ına göre. Varsayılan **adaptif** (yüzdelik). **Sabit** mod BTC tablosunu bu coin’in medyan trade’ine ölçekler — PEPE’de 1M$ Kraken olmaz.
+- **1dk vs açılıştan**: kısa/uzun çelişki asıl cümle.
+- **Toplama / boşaltma**: tepe vs taban + fiyat (tanh, oturum %’si 0.4’te satüre olmaz). OI varsa dipnot.
+- **Salvo**: 3sn benzer vuruşlar.
+- Radar, favori, yerel alarm, veri tasarrufu Ayar’da.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Veri
 
-## Expanding the Oxlint configuration
+- WS: `wss://fstream.binance.com/market` (`aggTrade`, `!forceOrder@arr`, radar açıkken `!miniTicker@arr`)
+- REST: `fapi.binance.com` `exchangeInfo` + `openInterest`
+- Mock / simülasyon yok.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Geliştirme
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
+npm test
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Sinyal eşikleri: `src/core/engine/signalConfig.ts`
+
+## Mimari
+
+`src/core` React tanımaz. WS mesajı bir kez parse edilir (`unwrapWs`), motor 20fps snapshot basar.

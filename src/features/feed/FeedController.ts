@@ -2,9 +2,10 @@
 
 import { PyramidEngine } from '../../core/engine/pyramidEngine'
 import { TapeBuffer } from '../../core/store/tapeBuffer'
-import { parseAggTradePayload } from '../../core/market/aggTrade'
-import { parseForceOrder } from '../../core/market/forceOrder'
-import { parseMiniTickerArr, type MiniRow } from '../../core/market/miniTicker'
+import { aggTradeFromObj } from '../../core/market/aggTrade'
+import { forceOrderFromObj } from '../../core/market/forceOrder'
+import { miniRowsFromArr, type MiniRow } from '../../core/market/miniTicker'
+import { unwrapWs } from '../../core/ws/unwrap'
 import { oiDelta, parseOpenInterest, type OiSnap } from '../../core/market/openInterest'
 import { OI_URLS, marketCombinedUrl } from '../../core/ws/endpoints'
 import { streamsFor } from '../../core/ws/streamPlan'
@@ -100,20 +101,22 @@ export class FeedController {
   }
 
   private route(raw: string): void {
-    const t = parseAggTradePayload(raw)
-    if (t) {
-      if (t.symbol !== this.symbol) return
+    const u = unwrapWs(raw)
+    if (u.kind === 'aggTrade') {
+      const t = aggTradeFromObj(u.data)
+      if (!t || t.symbol !== this.symbol) return
       this.engine.ingestTrade(t)
       this.tape.push(t)
       return
     }
-    const liq = parseForceOrder(raw)
-    if (liq) {
-      this.engine.ingestLiq(liq)
+    if (u.kind === 'forceOrder') {
+      const liq = forceOrderFromObj(u.data)
+      if (liq) this.engine.ingestLiq(liq)
       return
     }
-    const mini = parseMiniTickerArr(raw)
-    if (mini.length) {
+    if (u.kind === 'mini') {
+      const mini = miniRowsFromArr(u.data)
+      if (!mini.length) return
       this.radar = mini
         .filter((r) => r.symbol.endsWith('USDT'))
         .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))

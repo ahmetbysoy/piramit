@@ -2,6 +2,7 @@
 
 import { bucketFloor } from './microBuckets'
 import { FIXED_EDGES } from './layerNames'
+import { sizeScale } from './signalConfig'
 import type { LayerWallet } from './layerWallet'
 import { totalCount } from './layerWallet'
 
@@ -13,13 +14,29 @@ export function fixedEdges(): number[] {
   return [...FIXED_EDGES]
 }
 
+/** BTC tablosunu bu coin'in medyan notional'ına göre ölçekle. */
+export function scaleFixedEdges(medianNotional: number): number[] {
+  const k = sizeScale(medianNotional)
+  return FIXED_EDGES.map((e) => (Number.isFinite(e) ? e * k : e))
+}
+
+export function medianFromHistogram(buckets: LayerWallet[]): number {
+  const counts = buckets.map(totalCount)
+  const total = counts.reduce((a, n) => a + n, 0)
+  if (total < 8) return 0
+  return percentileFloor(counts, total, 0.5)
+}
+
 export function edgesFromHistogram(
   buckets: LayerWallet[],
   prev: number[] | null,
 ): number[] {
   const counts = buckets.map(totalCount)
   const total = counts.reduce((a, n) => a + n, 0)
-  if (total < MIN_TRADES) return prev ?? fixedEdges()
+  if (total < MIN_TRADES) {
+    const med = percentileFloor(counts, total, 0.5)
+    return prev ?? (total >= 8 ? scaleFixedEdges(med) : fixedEdges())
+  }
 
   const cuts = ADAPT_P.map((p) => percentileFloor(counts, total, p))
   const next = [0, ...cuts, Infinity]

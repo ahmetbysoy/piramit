@@ -16,6 +16,10 @@ export function parseMiniTickerArr(raw: string): MiniRow[] {
   }
   const rec = msg as { data?: unknown; e?: string }
   const arr = Array.isArray(rec.data) ? rec.data : Array.isArray(msg) ? msg : null
+  return miniRowsFromArr(arr)
+}
+
+export function miniRowsFromArr(arr: unknown[] | null): MiniRow[] {
   if (!arr) return []
   const out: MiniRow[] = []
   for (const x of arr) {

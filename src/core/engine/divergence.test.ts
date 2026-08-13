@@ -24,6 +24,13 @@ describe('divergence', () => {
     expect(s.kind).toBe('toplama')
   })
 
+  it('0.5% ile 3% fiyat aynı satüre değil', () => {
+    const base = { topNet: -20_000, botNet: 8_000, topAbs: 20_000, botAbs: 8_000 }
+    const a = scoreDivergence({ ...base, priceChange: 0.5 })
+    const b = scoreDivergence({ ...base, priceChange: 3 })
+    expect(b.score).toBeGreaterThan(a.score)
+  })
+
   it('hacim yoksa etiket yok', () => {
     expect(
       scoreDivergence({
