@@ -17,6 +17,7 @@ import { netWord } from '../ui/moneyTone'
 import { haptic } from '../telegram/webApp'
 import { watchAlerts } from '../features/alert/watchAlerts'
 import { alertsEnabled, askAlertPermission, setAlertsEnabled } from '../core/alert/localAlert'
+import { SettingCard } from '../ui/SettingCard'
 
 type Tab = 'piramit' | 'akis' | 'radar' | 'ayar'
 
@@ -44,9 +45,7 @@ export function App() {
       setRadarTick((n) => n + 1)
     })
     feed.start(symbol)
-    const id = window.setInterval(() => setTapeTick((n) => n + 1), 250)
     return () => {
-      window.clearInterval(id)
       feed.stop()
     }
   }, [feed, symbol])
@@ -167,34 +166,34 @@ export function App() {
         )}
         {tab === 'ayar' && (
           <div className="ayar">
-            <p>Katman eşiği</p>
-            <div className="wins">
+            <SettingCard label="Katman eşiği" hint="Adaptif coin’e göre yüzdelik. Sabit BTC tablosunu medyana ölçekler.">
               <button
                 className={snap.edgeMode === 'adaptif' ? 'on' : ''}
                 onClick={() => feed.engine.setEdgeMode('adaptif')}
               >
-                Adaptif (coin’e göre)
+                Adaptif
               </button>
               <button
                 className={snap.edgeMode === 'sabit' ? 'on' : ''}
                 onClick={() => feed.engine.setEdgeMode('sabit')}
               >
-                Sabit (BTC ölçeği)
+                Sabit
               </button>
-            </div>
-            <p className="dim">
-              Sinyal defteri: {snap.journalHits.ok}/{snap.journalHits.n || 0} isabet
-              (15dk sonra fiyat yönü). Tavsiye değil.
-            </p>
-            <p>Yerel alarm (Kraken / salvo / likidasyon)</p>
-            <div className="wins">
+            </SettingCard>
+            <SettingCard
+              label="Sinyal defteri"
+              hint={`${snap.journalHits.ok}/${snap.journalHits.n || 0} isabet (15dk sonra yön). Tavsiye değil.`}
+            >
+              <JournalList rows={snap.journal} />
+            </SettingCard>
+            <SettingCard label="Yerel alarm" hint="Kraken / salvo / likidasyon">
               <button
                 className={alertOn ? 'on' : ''}
                 onClick={() => {
                   void askAlertPermission().then((ok) => setAlertOn(ok))
                 }}
               >
-                Alarm açık
+                Açık
               </button>
               <button
                 className={!alertOn ? 'on' : ''}
@@ -205,9 +204,8 @@ export function App() {
               >
                 Kapalı
               </button>
-            </div>
-            <p>Veri tasarrufu (likidasyon + radar kapalı)</p>
-            <div className="wins">
+            </SettingCard>
+            <SettingCard label="Veri tasarrufu" hint="Likidasyon + radar stream kapalı">
               <button
                 className={saver ? 'on' : ''}
                 onClick={() => {
@@ -228,9 +226,8 @@ export function App() {
               >
                 Kapalı
               </button>
-            </div>
-            <JournalList rows={snap.journal} />
-            <p className="dim">Telegram’da BotFather → Mini App URL: bu site. Arka plana düşünce akış durur.</p>
+            </SettingCard>
+            <p className="dim">Telegram BotFather Mini App URL: bu site. Arka plana düşünce akış durur.</p>
           </div>
         )}
       </main>

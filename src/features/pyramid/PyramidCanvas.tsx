@@ -18,6 +18,7 @@ const MIN_BAR = 72
 
 export function PyramidCanvas({ layers, pulse }: Props) {
   const ref = useRef<HTMLCanvasElement>(null)
+  const buf = useRef({ dpr: 0, w: 0, h: 0 })
 
   useEffect(() => {
     const canvas = ref.current
@@ -29,8 +30,13 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       const dpr = window.devicePixelRatio || 1
       const w = canvas.clientWidth
       const h = canvas.clientHeight
-      canvas.width = Math.floor(w * dpr)
-      canvas.height = Math.floor(h * dpr)
+      const bw = Math.floor(w * dpr)
+      const bh = Math.floor(h * dpr)
+      if (buf.current.dpr !== dpr || canvas.width !== bw || canvas.height !== bh) {
+        buf.current = { dpr, w, h }
+        canvas.width = bw
+        canvas.height = bh
+      }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, w, h)
 
@@ -87,13 +93,15 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         ctx.fill()
         ctx.restore()
 
+        const midY = y + rowH / 2 + 4
         ctx.fillStyle = 'rgba(255,255,255,0.92)'
         ctx.font = '600 12px "DM Sans", system-ui'
         ctx.textAlign = 'left'
-        ctx.fillText(l.name, x + 10, y + rowH / 2 + 4)
+        const mark = empty || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'
+        ctx.fillText(`${mark} ${l.name}`, x + 10, midY)
         ctx.textAlign = 'right'
         const label = `${net === 'DÜZ' ? 'düz' : net}  ${formatCompactUsd(Math.abs(l.net))}`
-        ctx.fillText(label, x + volW - 10, y + rowH / 2 + 4)
+        ctx.fillText(label, x + volW - 10, midY)
       })
     }
 
@@ -103,7 +111,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
     return () => ro.disconnect()
   }, [layers, pulse])
 
-  return <canvas ref={ref} className="py-canvas" />
+  return <canvas ref={ref} className="py-canvas" aria-label="Katman piramidi, ALIŞ yukarı SATIŞ aşağı" />
 }
 
 function roundRect(
