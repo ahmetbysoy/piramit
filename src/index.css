@@ -67,6 +67,11 @@ body { overscroll-behavior: none; }
   font-weight: 700;
 }
 
+.err {
+  margin: 0 14px 8px;
+  color: var(--satis);
+  font-size: 12px;
+}
 .headline {
   margin: 0 14px 10px;
   font-size: 15px;

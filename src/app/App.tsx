@@ -62,6 +62,9 @@ export function App() {
         </div>
         <div className={`bag ${status}`}>{statusLabel(status)}</div>
       </header>
+      {feed.lastError && status !== 'acik' && (
+        <p className="err">Bağlantı: {feed.lastError}</p>
+      )}
 
       <div className="wins">
         {WINDOW_OPTIONS.map((w) => (

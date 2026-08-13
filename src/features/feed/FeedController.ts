@@ -11,6 +11,7 @@ export class FeedController {
   readonly tape = new TapeBuffer(80)
   readonly socket = new BinanceSocket()
   status: SocketStatus = 'kapali'
+  lastError: string | null = null
   private symbol = 'BTCUSDT'
   private onUi: (() => void) | null = null
 
@@ -19,6 +20,11 @@ export class FeedController {
     this.socket.setHandlers({
       onStatus: (s) => {
         this.status = s
+        this.lastError = this.socket.lastError
+        this.onUi?.()
+      },
+      onError: () => {
+        this.lastError = this.socket.lastError
         this.onUi?.()
       },
       onMessage: (raw) => {
@@ -42,7 +48,6 @@ export class FeedController {
     this.symbol = symbol.toUpperCase()
     this.engine.setSymbol(this.symbol)
     this.engine.start(20)
-    this.socket.disconnect()
     this.socket.connect(marketCombinedUrl([aggTradeStream(this.symbol)]))
   }
 

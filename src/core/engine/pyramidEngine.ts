@@ -59,6 +59,7 @@ export class PyramidEngine {
   private listeners = new Set<EngineListener>()
   private flushTimer = 0
   private dirty = false
+  private cached: PyramidSnapshot = this.buildSnapshot()
 
   setSymbol(symbol: string): void {
     this.symbol = symbol
@@ -109,6 +110,10 @@ export class PyramidEngine {
   }
 
   snapshot(): PyramidSnapshot {
+    return this.cached
+  }
+
+  private buildSnapshot(): PyramidSnapshot {
     const now = this.lastTrade?.timeMs ?? Date.now()
     const win =
       this.windowSec === 'oturum'
@@ -131,7 +136,8 @@ export class PyramidEngine {
   }
 
   private emit(): void {
-    const s = this.snapshot()
+    this.cached = this.buildSnapshot()
+    const s = this.cached
     for (const fn of this.listeners) fn(s)
   }
 }
