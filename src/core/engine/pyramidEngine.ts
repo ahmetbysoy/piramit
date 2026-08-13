@@ -13,6 +13,7 @@ import { scoreDivergence, type DivKind } from './divergence'
 import { SignalJournal } from './signalJournal'
 import { readClash } from './windowClash'
 import { SIGNAL, sizeScale } from './signalConfig'
+import type { OiState } from './oiState'
 
 export const WINDOW_OPTIONS = [60, 300, 900, 3600] as const
 export type WindowSec = (typeof WINDOW_OPTIONS)[number] | 'oturum'
@@ -52,6 +53,8 @@ export type PyramidSnapshot = {
   divYazi: string
   oi: number | null
   oiDelta: number | null
+  oiState: OiState
+  edges: number[]
   lastLiq: Liq | null
   journalHits: { n: number; ok: number }
   journal: { id: string; kind: string; symbol: string; price: number; at: number; later15: number | null }[]
@@ -102,6 +105,7 @@ export class PyramidEngine {
   private lastBurst: BurstHit | null = null
   private oi: number | null = null
   private oiDelta: number | null = null
+  private oiState: OiState = 'bekliyor'
   private lastLiq: Liq | null = null
   private lastJournalKind: DivKind = 'yok'
   private clock: () => number = () => Date.now()
@@ -132,6 +136,12 @@ export class PyramidEngine {
   setOi(oi: number | null, delta: number | null): void {
     this.oi = oi
     this.oiDelta = delta
+    this.oiState = oi == null ? 'yok' : 'ok'
+    this.dirty = true
+  }
+
+  markOiFail(): void {
+    this.oiState = this.oi != null ? 'eski' : 'yok'
     this.dirty = true
   }
 
@@ -155,6 +165,7 @@ export class PyramidEngine {
     this.lastLiq = null
     this.oi = null
     this.oiDelta = null
+    this.oiState = 'bekliyor'
     this.lastJournalKind = 'yok'
     this.edges = scaleFixedEdges(0)
     this.dirty = false
@@ -302,6 +313,8 @@ export class PyramidEngine {
       divYazi: div.yazi,
       oi: this.oi,
       oiDelta: this.oiDelta,
+      oiState: this.oiState,
+      edges: this.edges.slice(),
       lastLiq: this.lastLiq,
       journalHits: this.journal.hitRate(),
       journal: this.journal.list().slice(0, 12).map((r) => ({

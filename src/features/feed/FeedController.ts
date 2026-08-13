@@ -148,10 +148,15 @@ export class FeedController {
         const d = oiDelta(this.prevOi, snap)
         this.prevOi = snap
         this.engine.setOi(snap.oi, d)
+        this.engine.flush()
+        this.onUi?.()
         return
       } catch {
         /* CORS / 451 */
       }
     }
+    this.engine.markOiFail()
+    this.engine.flush()
+    this.onUi?.()
   }
 }

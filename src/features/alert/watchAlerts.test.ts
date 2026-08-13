@@ -37,6 +37,8 @@ function snap(over: Partial<PyramidSnapshot> = {}): PyramidSnapshot {
     divYazi: '',
     oi: null,
     oiDelta: null,
+    oiState: 'bekliyor',
+    edges: [0, 1, 2, 3, 4, 5, 6, Infinity],
     lastLiq: null,
     journalHits: { n: 0, ok: 0 },
     journal: [],

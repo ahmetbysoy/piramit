@@ -95,6 +95,23 @@ describe('PyramidEngine pencereler + coin', () => {
     expect(e.snapshot().sessionSell).toBe(sess)
   })
 
+  it('OI fail yalan söylemez', () => {
+    const e = new PyramidEngine()
+    e.setSymbol('BTCUSDT')
+    expect(e.snapshot().oiState).toBe('bekliyor')
+    e.markOiFail()
+    e.flush()
+    expect(e.snapshot().oiState).toBe('yok')
+    e.setOi(12, 1)
+    e.flush()
+    expect(e.snapshot().oiState).toBe('ok')
+    e.markOiFail()
+    e.flush()
+    expect(e.snapshot().oiState).toBe('eski')
+    expect(e.snapshot().oi).toBe(12)
+    expect(e.snapshot().edges.length).toBeGreaterThan(2)
+  })
+
   it('kovalar zaman sıralı kalır', () => {
     const e = new PyramidEngine()
     e.setClock(() => t0 + 4000)

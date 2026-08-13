@@ -3,9 +3,11 @@ import { useEngine } from '../bridge/useEngine'
 import { WINDOW_OPTIONS, type WindowSec } from '../core/engine/pyramidEngine'
 import { topSlice } from '../core/engine/layerNames'
 import { formatCompactUsd, windowLabel } from '../core/format/money'
+import { oiMeta, type OiState } from '../core/engine/oiState'
 import { formatPrice } from '../core/format/formatPrice'
 import { FeedController } from '../features/feed/FeedController'
 import { PyramidCanvas } from '../features/pyramid/PyramidCanvas'
+import { LayerLegend } from '../features/pyramid/LayerLegend'
 import { TapeList } from '../features/flow/TapeList'
 import { SymbolSearch } from '../features/settings/SymbolSearch'
 import { RadarList } from '../features/radar/RadarList'
@@ -202,7 +204,10 @@ export function App() {
 
       <main className="main glass">
         {tab === 'piramit' && (
-          <PyramidCanvas key={symbol} layers={snap.layers} pulse={snap.tickCount} />
+          <>
+            <PyramidCanvas key={symbol} layers={snap.layers} pulse={snap.tickCount} />
+            <LayerLegend edges={snap.edges} />
+          </>
         )}
         {tab === 'akis' && <TapeList trades={feed.tape.newestFirst()} key={tapeTick} />}
         {tab === 'radar' && (
@@ -335,6 +340,7 @@ function metaLine(snap: {
   burst: { count: number; merged: number } | null
   oi: number | null
   oiDelta: number | null
+  oiState: OiState
   lastLiq: { side: string; notional: number } | null
   edgeMode: string
 }): string {
@@ -343,12 +349,7 @@ function metaLine(snap: {
   if (snap.burst) {
     bits.push(`salvo ${snap.burst.count} vuruş ≈ ${formatCompactUsd(snap.burst.merged)}`)
   }
-  if (snap.oi != null) {
-    const d = snap.oiDelta
-    bits.push(
-      `OI ${formatCompactUsd(snap.oi)}${d == null ? '' : d >= 0 ? ' ↑' : ' ↓'}`,
-    )
-  }
+  bits.push(oiMeta(snap.oiState, snap.oi, snap.oiDelta, formatCompactUsd))
   if (snap.lastLiq) {
     bits.push(`likidasyon ${snap.lastLiq.side} ${formatCompactUsd(snap.lastLiq.notional)}`)
   }

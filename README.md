@@ -8,7 +8,7 @@ Canlı: https://piramit.vercel.app
 
 - **Katmanlar** (Toz → Kraken): trade notional’ına göre. Varsayılan **adaptif** (yüzdelik). **Sabit** mod BTC tablosunu bu coin’in medyan trade’ine ölçekler — PEPE’de 1M$ Kraken olmaz.
 - **1dk vs açılıştan**: kısa/uzun çelişki asıl cümle.
-- **Toplama / boşaltma**: tepe vs taban + fiyat (tanh, oturum %’si 0.4’te satüre olmaz). OI varsa dipnot.
+- **Toplama / boşaltma**: tepe vs taban + fiyat (tanh, oturum %’si 0.4’te satüre olmaz). OI gelmezse (CORS/451) metinde **OI yok** yazar, uydurma yok.
 - **Salvo**: 3sn benzer vuruşlar.
 - Radar, favori, yerel alarm, veri tasarrufu Ayar’da.
 - Telegram: `t.me/BOT/app?startapp=ETH` veya `?s=ETH` / `#ETH` ile coin açılır. Coin değişince hash güncellenir. Geri tuşu önce Piramit’e döner; **Paylaş** MainButton başlığı Telegram’a atar.
