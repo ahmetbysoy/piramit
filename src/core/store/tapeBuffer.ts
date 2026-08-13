@@ -14,6 +14,12 @@ export class TapeBuffer {
     this.buf = Array.from({ length: cap }, () => null)
   }
 
+  clear(): void {
+    this.head = 0
+    this.size = 0
+    this.buf.fill(null)
+  }
+
   push(t: AggTrade): void {
     this.buf[this.head] = t
     this.head = (this.head + 1) % this.cap

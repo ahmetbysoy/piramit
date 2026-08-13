@@ -4,6 +4,8 @@ import { parseAggTradePayload, type AggTrade } from '../market/aggTrade'
 import { LAYER_NAMES } from './layerNames'
 import { netDelta, totalCount, totalNotional, type LayerWallet } from './layerWallet'
 import { WindowLedger } from './windowLedger'
+import { fixedEdges, foldBuckets } from './layerMapper'
+import { detectShape, type ShapeId } from './morphology'
 
 export const WINDOW_OPTIONS = [60, 300, 900, 3600] as const
 export type WindowSec = (typeof WINDOW_OPTIONS)[number] | 'oturum'
@@ -30,6 +32,8 @@ export type PyramidSnapshot = {
   sessionLayers: LayerView[]
   lastTrade: AggTrade | null
   tickCount: number
+  shapeId: ShapeId
+  shapeYazi: string
 }
 
 export type EngineListener = (s: PyramidSnapshot) => void
@@ -59,10 +63,20 @@ export class PyramidEngine {
   private listeners = new Set<EngineListener>()
   private flushTimer = 0
   private dirty = false
+  private edges = fixedEdges()
   private cached: PyramidSnapshot = this.buildSnapshot()
 
   setSymbol(symbol: string): void {
+    if (this.symbol === symbol) return
     this.symbol = symbol
+    this.reset()
+  }
+
+  reset(): void {
+    this.ledger.reset()
+    this.lastTrade = null
+    this.tickCount = 0
+    this.emit()
   }
 
   setWindow(w: WindowSec): void {
@@ -86,13 +100,12 @@ export class PyramidEngine {
     this.tickCount += 1
     this.dirty = true
     if (typeof this.windowSec === 'number') {
-      this.ledger.pruneOlderThan(Math.floor(t.timeMs / 1000) - this.windowSec - 5)
+      this.ledger.pruneOlderThan(Math.floor(t.timeMs / 1000) - 3600 - 5)
     }
   }
 
   subscribe(fn: EngineListener): () => void {
     this.listeners.add(fn)
-    fn(this.snapshot())
     return () => this.listeners.delete(fn)
   }
 
@@ -115,23 +128,27 @@ export class PyramidEngine {
 
   private buildSnapshot(): PyramidSnapshot {
     const now = this.lastTrade?.timeMs ?? Date.now()
-    const win =
+    const winBuckets =
       this.windowSec === 'oturum'
-        ? this.ledger.sessionWallets()
+        ? this.ledger.sessionBuckets()
         : this.ledger.sumWindow(this.windowSec, now)
+    const layers = toViews(foldBuckets(winBuckets, this.edges))
+    const sessionLayers = toViews(foldBuckets(this.ledger.sessionBuckets(), this.edges))
     const px = this.ledger.lastPriceInfo()
-    const changePct =
-      px.open > 0 ? ((px.price - px.open) / px.open) * 100 : 0
+    const changePct = px.open > 0 ? ((px.price - px.open) / px.open) * 100 : 0
+    const shape = detectShape(layers)
     return {
       symbol: this.symbol,
       windowSec: this.windowSec,
       priceStr: px.priceStr,
       price: px.price,
       changePct,
-      layers: toViews(win),
-      sessionLayers: toViews(this.ledger.sessionWallets()),
+      layers,
+      sessionLayers,
       lastTrade: this.lastTrade,
       tickCount: this.tickCount,
+      shapeId: shape.id,
+      shapeYazi: shape.yazi,
     }
   }
 

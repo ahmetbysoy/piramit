@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useEngine } from '../bridge/useEngine'
 import { WINDOW_OPTIONS, type WindowSec } from '../core/engine/pyramidEngine'
-import { formatCompactUsd, formatPriceDisplay, windowLabel } from '../core/format/money'
+import { formatCompactUsd, windowLabel } from '../core/format/money'
+import { formatPrice } from '../core/format/formatPrice'
 import { FeedController } from '../features/feed/FeedController'
-import { PyramidBars } from '../features/pyramid/PyramidBars'
+import { PyramidCanvas } from '../features/pyramid/PyramidCanvas'
 import { TapeList } from '../features/flow/TapeList'
 import { netWord } from '../ui/moneyTone'
 
@@ -34,6 +35,8 @@ export function App() {
 
   const windowSec = snap.windowSec
   const setWindow = (w: WindowSec) => feed.engine.setWindow(w)
+  const tick = feed.precision.get(symbol)?.tickSize ?? '0.01'
+  const priceTxt = formatPrice(snap.priceStr, tick)
 
   const topNet = snap.layers.slice(4).reduce((a, l) => a + l.net, 0)
   const botNet = snap.layers.slice(0, 3).reduce((a, l) => a + l.net, 0)
@@ -54,7 +57,7 @@ export function App() {
           ))}
         </select>
         <div className="px-block">
-          <div className="px">{formatPriceDisplay(snap.priceStr)}</div>
+          <div className="px">{priceTxt}</div>
           <div className={snap.changePct >= 0 ? 'chg up' : 'chg dn'}>
             {snap.changePct >= 0 ? '+' : ''}
             {snap.changePct.toFixed(2)}%
@@ -84,7 +87,8 @@ export function App() {
         </button>
       </div>
 
-      <p className="headline">{buildHeadline(topNet, botNet)}</p>
+      <p className="headline">{snap.shapeYazi}</p>
+      <p className="headline sub">{buildHeadline(topNet, botNet)}</p>
 
       <div className="subtabs">
         <button className={tab === 'piramit' ? 'on' : ''} onClick={() => setTab('piramit')}>
@@ -97,7 +101,7 @@ export function App() {
 
       <main className="main">
         {tab === 'piramit' ? (
-          <PyramidBars layers={snap.layers} />
+          <PyramidCanvas layers={snap.layers} pulse={snap.tickCount} />
         ) : (
           <TapeList trades={feed.tape.newestFirst()} key={tapeTick} />
         )}
