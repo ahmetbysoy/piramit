@@ -46,6 +46,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
       const alis = cs.getPropertyValue('--alis').trim() || '#3dffa1'
       const satis = cs.getPropertyValue('--satis').trim() || '#ff5d7a'
       const mute = cs.getPropertyValue('--card').trim() || '#1c2230'
+      const ink = cs.getPropertyValue('--txt').trim() || '#eef2f8'
 
       const rev = [...layers].reverse()
       const empty = rev.every((l) => l.share === 0)
@@ -98,7 +99,7 @@ export function PyramidCanvas({ layers, pulse }: Props) {
         ctx.restore()
 
         const midY = y + rowH / 2 + 4
-        ctx.fillStyle = 'rgba(255,255,255,0.92)'
+        ctx.fillStyle = ink
         ctx.font = '600 12px "DM Sans", system-ui'
         ctx.textAlign = 'left'
         const mark = empty || net === 'DÜZ' ? '·' : net === 'ALIŞ' ? '▲' : '▼'

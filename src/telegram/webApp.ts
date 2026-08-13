@@ -3,9 +3,18 @@
 type Tg = {
   ready: () => void
   expand: () => void
+  close?: () => void
+  disableVerticalSwipes?: () => void
   viewportStableHeight?: number
   themeParams?: Record<string, string>
+  initDataUnsafe?: { start_param?: string }
   onEvent?: (e: string, cb: () => void) => void
+  BackButton?: {
+    show: () => void
+    hide: () => void
+    onClick: (cb: () => void) => void
+    offClick?: (cb: () => void) => void
+  }
   HapticFeedback?: { impactOccurred: (s: string) => void }
 }
 
@@ -19,6 +28,7 @@ export function bootTelegram(): void {
   if (!tg) return
   tg.ready()
   tg.expand()
+  tg.disableVerticalSwipes?.()
   applyTheme(tg.themeParams)
   applyViewport(tg.viewportStableHeight)
   tg.onEvent?.('themeChanged', () => applyTheme(api()?.themeParams))
@@ -43,6 +53,26 @@ export function applyTheme(t?: Record<string, string>): void {
 function applyViewport(h?: number): void {
   if (!h) return
   document.documentElement.style.setProperty('--tg-vh', `${h}px`)
+}
+
+export function telegramStartSymbol(): string | null {
+  const p = api()?.initDataUnsafe?.start_param
+  return p ? p : null
+}
+
+export function bindBackButton(onBack: () => boolean): () => void {
+  const bb = api()?.BackButton
+  if (!bb) return () => undefined
+  const handler = () => {
+    const stayed = onBack()
+    if (!stayed) api()?.close?.()
+  }
+  bb.onClick(handler)
+  bb.show()
+  return () => {
+    bb.offClick?.(handler)
+    bb.hide()
+  }
 }
 
 export function haptic(): void {

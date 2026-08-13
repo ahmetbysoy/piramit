@@ -14,7 +14,8 @@ import { FavChips } from '../features/settings/FavChips'
 import { loadSaver, saveSaver } from '../core/store/dataSaver'
 import { loadPrefs, savePrefs } from '../core/store/prefs'
 import { netWord } from '../ui/moneyTone'
-import { haptic } from '../telegram/webApp'
+import { bindBackButton, haptic, telegramStartSymbol } from '../telegram/webApp'
+import { normalizeLaunchSymbol, symbolFromLocation } from '../telegram/launch'
 import { watchAlerts } from '../features/alert/watchAlerts'
 import { alertsEnabled, askAlertPermission, setAlertsEnabled } from '../core/alert/localAlert'
 import { SettingCard } from '../ui/SettingCard'
@@ -24,10 +25,15 @@ type Tab = 'piramit' | 'akis' | 'radar' | 'ayar'
 export function App() {
   const feed = useMemo(() => new FeedController(), [])
   const prefs = useMemo(() => loadPrefs(), [])
+  const bootSymbol = useMemo(() => {
+    const fromTg = telegramStartSymbol()
+    const fromUrl = typeof window !== 'undefined' ? symbolFromLocation(window.location.search, window.location.hash) : null
+    return (fromTg ? normalizeLaunchSymbol(fromTg) : null) ?? fromUrl ?? prefs.symbol
+  }, [prefs.symbol])
   const snap = useEngine(feed.engine)
   const [tab, setTab] = useState<Tab>('piramit')
   const [status, setStatus] = useState(feed.status)
-  const [symbol, setSymbol] = useState(prefs.symbol)
+  const [symbol, setSymbol] = useState(bootSymbol)
   const [tapeTick, setTapeTick] = useState(0)
   const [listReady, setListReady] = useState(feed.precision.loaded)
   const [radarTick, setRadarTick] = useState(0)
@@ -74,6 +80,16 @@ export function App() {
     watchAlerts(prevSnap.current, snap)
     prevSnap.current = snap
   }, [snap])
+
+  useEffect(() => {
+    return bindBackButton(() => {
+      if (tab !== 'piramit') {
+        setTab('piramit')
+        return true
+      }
+      return false
+    })
+  }, [tab])
 
   const windowSec = snap.windowSec
   const setWindow = (w: WindowSec) => {
