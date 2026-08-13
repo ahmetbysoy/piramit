@@ -6,9 +6,8 @@ import { formatPrice } from '../core/format/formatPrice'
 import { FeedController } from '../features/feed/FeedController'
 import { PyramidCanvas } from '../features/pyramid/PyramidCanvas'
 import { TapeList } from '../features/flow/TapeList'
+import { SymbolSearch } from '../features/settings/SymbolSearch'
 import { netWord } from '../ui/moneyTone'
-
-const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT']
 
 type Tab = 'piramit' | 'akis'
 
@@ -19,11 +18,13 @@ export function App() {
   const [status, setStatus] = useState(feed.status)
   const [symbol, setSymbol] = useState(feed.getSymbol())
   const [tapeTick, setTapeTick] = useState(0)
+  const [listReady, setListReady] = useState(feed.precision.loaded)
 
   useEffect(() => {
     feed.onChange(() => {
       setStatus(feed.status)
       setTapeTick((n) => n + 1)
+      setListReady(feed.precision.loaded)
     })
     feed.start(symbol)
     const id = window.setInterval(() => setTapeTick((n) => n + 1), 250)
@@ -44,26 +45,22 @@ export function App() {
 
   return (
     <div className="shell">
+      <div className="glow" aria-hidden />
       <header className="top">
-        <select
+        <SymbolSearch
+          registry={feed.precision}
           value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          className="sym"
-        >
-          {SYMBOLS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          ready={listReady}
+          onPick={setSymbol}
+        />
         <div className="px-block">
           <div className="px">{priceTxt}</div>
           <div className={snap.changePct >= 0 ? 'chg up' : 'chg dn'}>
             {snap.changePct >= 0 ? '+' : ''}
             {snap.changePct.toFixed(2)}%
+            <span className={`dot ${status}`} />
           </div>
         </div>
-        <div className={`bag ${status}`}>{statusLabel(status)}</div>
       </header>
       {feed.lastError && status !== 'acik' && (
         <p className="err">Bağlantı: {feed.lastError}</p>
@@ -99,7 +96,7 @@ export function App() {
         </button>
       </div>
 
-      <main className="main">
+      <main className="main glass">
         {tab === 'piramit' ? (
           <PyramidCanvas layers={snap.layers} pulse={snap.tickCount} />
         ) : (
@@ -108,30 +105,32 @@ export function App() {
       </main>
 
       <section className="foot-card">
-        <div>
-          <span className="k">Son {windowLabel(windowSec === 'oturum' ? 60 : windowSec)}</span>
-          <b className={netWord(topNet) === 'ALIŞ' ? 'alis' : 'satis'}>
-            büyükler {netWord(topNet)} {formatCompactUsd(Math.abs(topNet))}
-          </b>
+        <div className="split">
+          <div>
+            <span className="k">Son {windowLabel(windowSec === 'oturum' ? 60 : windowSec)}</span>
+            <b className={netWord(topNet) === 'ALIŞ' ? 'alis' : 'satis'}>
+              büyükler {netWord(topNet)} {formatCompactUsd(Math.abs(topNet))}
+            </b>
+          </div>
+          <div>
+            <span className="k">Açılıştan</span>
+            <b className={netWord(sessTop) === 'ALIŞ' ? 'alis' : 'satis'}>
+              büyükler {netWord(sessTop)} {formatCompactUsd(Math.abs(sessTop))}
+            </b>
+          </div>
         </div>
-        <div>
-          <span className="k">Açılıştan</span>
-          <b className={netWord(sessTop) === 'ALIŞ' ? 'alis' : 'satis'}>
-            büyükler {netWord(sessTop)} {formatCompactUsd(Math.abs(sessTop))}
-          </b>
-        </div>
-        <div className="ticks">{snap.tickCount} işlem sayıldı</div>
+        <div className="ticks">{snap.tickCount.toLocaleString('tr-TR')} işlem · {statusLabel(status)}</div>
       </section>
 
       <nav className="nav">
         <button className={tab === 'piramit' ? 'on' : ''} onClick={() => setTab('piramit')}>
-          🔺 Piramit
+          Piramit
         </button>
         <button className={tab === 'akis' ? 'on' : ''} onClick={() => setTab('akis')}>
-          🌊 Akış
+          Akış
         </button>
-        <button disabled>📡 Radar</button>
-        <button disabled>⚙️ Ayar</button>
+        <button disabled>Radar</button>
+        <button disabled>Ayar</button>
       </nav>
 
       <p className="disclaimer">Bu tavsiye değil. Sadece borsadan gelen alış-satış sayımı.</p>
