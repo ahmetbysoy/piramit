@@ -54,4 +54,11 @@ describe('parseAggTradePayload', () => {
     expect(t?.qty).toBeCloseTo(1.5)
     expect(t?.notional).toBeCloseTo(150)
   })
+
+  it('nq yoksa q ile aynı notional', () => {
+    const withQ = parseAggTradePayload(JSON.stringify({ ...base, m: false }))
+    const noNq = parseAggTradePayload(JSON.stringify({ ...base, m: false, nq: undefined }))
+    expect(withQ?.notional).toBe(noNq?.notional)
+    expect(withQ?.qtyStr).toBe('0.010')
+  })
 })

@@ -9,6 +9,7 @@ export const t = {
     adaptWarm: 'Adaptif kuruluyor',
     saveShot: 'Kaydet',
     saved: 'İndirildi.',
+    adaptFlip: 'Eşikler güncellendi — şekil değişebilir, bug değil.',
   },
 } as const
 

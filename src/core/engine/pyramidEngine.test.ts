@@ -112,6 +112,24 @@ describe('PyramidEngine pencereler + coin', () => {
     expect(e.snapshot().edges.length).toBeGreaterThan(2)
   })
 
+  it('39 ve 41 tick LayerView şeması aynı', () => {
+    const e = new PyramidEngine()
+    e.setClock(() => t0 + 60_000)
+    e.setSymbol('BTCUSDT')
+    const keys = (n: number) => {
+      for (let i = e.snapshot().tickCount; i < n; i++) {
+        e.ingestTrade(trade({ tradeId: i + 1, notional: 80, timeMs: t0 + i * 200 }))
+      }
+      e.flush()
+      return Object.keys(e.snapshot().layers[0]).sort()
+    }
+    const a = keys(39)
+    const b = keys(41)
+    expect(a).toEqual(b)
+    expect(e.snapshot().layers).toHaveLength(7)
+    expect(e.snapshot().adaptReady).toBe(true)
+  })
+
   it('kovalar zaman sıralı kalır', () => {
     const e = new PyramidEngine()
     e.setClock(() => t0 + 4000)

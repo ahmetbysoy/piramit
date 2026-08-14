@@ -11,9 +11,11 @@ export function detectShape(
   id: ShapeId
   yazi: string
 } {
-  const shares = layers.map((l) => l.share)
   const vol = layers.reduce((a, l) => a + l.buyNotional + l.sellNotional, 0)
+  if (!Number.isFinite(vol) || vol <= 0) return { id: 'bos', yazi: 'Sessizlik. Bekle.' }
   if (vol < SIGNAL.volBos * scale) return { id: 'bos', yazi: 'Sessizlik. Bekle.' }
+
+  const shares = layers.map((l) => (Number.isFinite(l.share) ? l.share : 0))
 
   const bot = shares[0] + shares[1] + shares[2]
   const mid = shares[3]

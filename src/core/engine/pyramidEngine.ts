@@ -7,7 +7,7 @@ import { netDelta, totalCount, totalNotional, type LayerWallet } from './layerWa
 import { KEEP_SECONDS, WindowLedger } from './windowLedger'
 import { foldBuckets, layerFromEdges } from './layerMapper'
 import { detectShape, type ShapeId } from './morphology'
-import { edgesFromHistogram, medianFromHistogram, scaleFixedEdges } from './adaptiveEdges'
+import { ADAPT_MIN_TRADES, edgesFromHistogram, medianFromHistogram, scaleFixedEdges } from './adaptiveEdges'
 import { BurstDetector, type BurstHit } from './burstDetector'
 import { scoreDivergence, type DivKind } from './divergence'
 import { SignalJournal } from './signalJournal'
@@ -59,6 +59,8 @@ export type PyramidSnapshot = {
   journalHits: { n: number; ok: number }
   journal: { id: string; kind: string; symbol: string; price: number; at: number; later15: number | null }[]
   clashYazi: string
+  adaptReady: boolean
+  adaptFlip: boolean
 }
 
 export type EngineListener = (s: PyramidSnapshot) => void
@@ -108,6 +110,8 @@ export class PyramidEngine {
   private oiState: OiState = 'bekliyor'
   private lastLiq: Liq | null = null
   private lastJournalKind: DivKind = 'yok'
+  private wasAdaptReady = false
+  private adaptFlipMs = 0
   private clock: () => number = () => Date.now()
   private cached: PyramidSnapshot = this.buildSnapshot()
 
@@ -167,6 +171,8 @@ export class PyramidEngine {
     this.oiDelta = null
     this.oiState = 'bekliyor'
     this.lastJournalKind = 'yok'
+    this.wasAdaptReady = false
+    this.adaptFlipMs = 0
     this.edges = scaleFixedEdges(0)
     this.dirty = false
     this.emit()
@@ -245,6 +251,11 @@ export class PyramidEngine {
     const sessionBuckets = this.ledger.sessionBuckets()
     const med = medianFromHistogram(sessionBuckets)
     const scale = sizeScale(med || 0)
+    const adaptReady = this.edgeMode === 'adaptif' && this.tickCount >= ADAPT_MIN_TRADES
+    if (adaptReady && !this.wasAdaptReady) {
+      this.adaptFlipMs = now
+      this.wasAdaptReady = true
+    }
     if (this.edgeMode === 'adaptif') {
       this.edges = edgesFromHistogram(sessionBuckets, this.edges)
     } else {
@@ -326,6 +337,8 @@ export class PyramidEngine {
         later15: r.later15,
       })),
       clashYazi: clash.yazi,
+      adaptReady,
+      adaptFlip: adaptReady && now - this.adaptFlipMs < 2000,
     }
   }
 

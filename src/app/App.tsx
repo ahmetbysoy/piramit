@@ -210,6 +210,11 @@ export function App() {
           {t.tr.adaptWarm} ({snap.tickCount}/{ADAPT_MIN_TRADES})
         </p>
       )}
+      {snap.adaptFlip && (
+        <p className="headline sub" data-testid="adapt-flip">
+          Eşikler güncellendi — şekil değişebilir, bug değil.
+        </p>
+      )}
 
       <main className="main glass">
         {tab === 'piramit' && (

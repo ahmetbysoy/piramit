@@ -2,6 +2,7 @@
 
 import type { PyramidSnapshot } from '../engine/pyramidEngine'
 import { formatUsdt } from './money'
+import { formatPrice } from './formatPrice'
 
 function yon(n: number): string {
   if (n > 0) return 'ALIŞ'
@@ -11,7 +12,7 @@ function yon(n: number): string {
 
 export function sessionShotText(s: PyramidSnapshot): string {
   const lines = [
-    `${s.symbol}  ${s.priceStr}  ${s.changePct.toFixed(2)}%`,
+    `${s.symbol}  ${formatPrice(s.priceStr)}  ${s.changePct.toFixed(2)}%`,
     s.clashYazi || s.divYazi || s.shapeYazi,
     `pencere=${s.windowSec}  işlem=${s.tickCount}  eşik=${s.edgeMode}`,
     '',

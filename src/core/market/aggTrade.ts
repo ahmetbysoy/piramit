@@ -53,9 +53,10 @@ export function aggTradeFromObj(d: RawAgg | Record<string, unknown>): AggTrade |
   if (typeof d.m !== 'boolean' || typeof d.s !== 'string') return null
 
   const price = Number(d.p)
-  const qtyRaw = typeof d.nq === 'string' && d.nq.length ? d.nq : d.q
+  const nq = typeof d.nq === 'string' ? d.nq : undefined
+  const qtyRaw = pickQtyStr(d.q, nq)
   const qty = Number(qtyRaw)
-  if (!Number.isFinite(price) || !Number.isFinite(qty)) return null
+  if (!Number.isFinite(price) || !Number.isFinite(qty) || qty < 0) return null
 
   return {
     symbol: d.s,
@@ -68,4 +69,10 @@ export function aggTradeFromObj(d: RawAgg | Record<string, unknown>): AggTrade |
     side: sideFromMakerFlag(d.m),
     timeMs: typeof d.T === 'number' ? d.T : Date.now(),
   }
+}
+
+/** Sınır: string seç. Parse sadece burada. Motor sayı görür. */
+export function pickQtyStr(q: string, nq?: string): string {
+  if (typeof nq === 'string' && nq.length > 0) return nq
+  return q
 }

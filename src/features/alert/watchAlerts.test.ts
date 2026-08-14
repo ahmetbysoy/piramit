@@ -43,6 +43,8 @@ function snap(over: Partial<PyramidSnapshot> = {}): PyramidSnapshot {
     journalHits: { n: 0, ok: 0 },
     journal: [],
     clashYazi: '',
+    adaptReady: false,
+    adaptFlip: false,
     ...over,
   }
 }
