@@ -22,6 +22,9 @@ import { normalizeLaunchSymbol, symbolFromLocation, writeSymbolHash } from '../t
 import { watchAlerts } from '../features/alert/watchAlerts'
 import { alertsEnabled, askAlertPermission, setAlertsEnabled } from '../core/alert/localAlert'
 import { SettingCard } from '../ui/SettingCard'
+import { t } from '../ui/strings'
+import { downloadSessionShot } from '../core/format/sessionShot'
+import { ADAPT_MIN_TRADES } from '../core/engine/adaptiveEdges'
 
 type Tab = 'piramit' | 'akis' | 'radar' | 'ayar'
 
@@ -202,6 +205,11 @@ export function App() {
         {copied ? 'Kopyalandı.' : headline}
       </p>
       <p className="headline sub">{metaLine(snap)}</p>
+      {snap.edgeMode === 'adaptif' && snap.tickCount < ADAPT_MIN_TRADES && (
+        <p className="headline sub" data-testid="adapt-warm">
+          {t.tr.adaptWarm} ({snap.tickCount}/{ADAPT_MIN_TRADES})
+        </p>
+      )}
 
       <main className="main glass">
         {tab === 'piramit' && (
@@ -305,6 +313,16 @@ export function App() {
           {snap.tickCount.toLocaleString('tr-TR')} işlem · {statusLabel(status)}
         </div>
         <p className="disclaimer">Bu tavsiye değil. Sadece borsadan gelen alış-satış sayımı.</p>
+        <button
+          type="button"
+          className="retry"
+          onClick={() => {
+            downloadSessionShot(snap)
+            haptic()
+          }}
+        >
+          {t.tr.saveShot}
+        </button>
       </section>
 
       <nav className="nav" aria-label="Ana menü">

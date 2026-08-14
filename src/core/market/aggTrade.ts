@@ -20,6 +20,7 @@ type RawAgg = {
   a?: number
   p?: string
   q?: string
+  nq?: string
   T?: number
   m?: boolean
 }
@@ -52,14 +53,15 @@ export function aggTradeFromObj(d: RawAgg | Record<string, unknown>): AggTrade |
   if (typeof d.m !== 'boolean' || typeof d.s !== 'string') return null
 
   const price = Number(d.p)
-  const qty = Number(d.q)
+  const qtyRaw = typeof d.nq === 'string' && d.nq.length ? d.nq : d.q
+  const qty = Number(qtyRaw)
   if (!Number.isFinite(price) || !Number.isFinite(qty)) return null
 
   return {
     symbol: d.s,
     tradeId: typeof d.a === 'number' ? d.a : 0,
     priceStr: d.p,
-    qtyStr: d.q,
+    qtyStr: qtyRaw,
     price,
     qty,
     notional: price * qty,

@@ -17,7 +17,7 @@ Telegram Mini App: BotFather `/newapp` → `https://piramit.vercel.app` → `t.m
 
 ## Veri
 
-- WS: `wss://fstream.binance.com/market` — `aggTrade`, `!forceOrder@arr`, radar’da `!miniTicker@arr`
+- WS: `wss://fstream.binance.com/market` — `aggTrade` (`nq` varsa RPI hariç, yoksa `q`), `!forceOrder@arr`, radar’da `!miniTicker@arr`
 - REST: `exchangeInfo` (tohum liste + fapi/fapi1/fapi2), `openInterest`
 - **API key yok.** Public market. Mock yok.
 

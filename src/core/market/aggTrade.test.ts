@@ -46,4 +46,12 @@ describe('parseAggTradePayload', () => {
     expect(t?.qty).toBeCloseTo(0.275)
     expect(t?.notional).toBeCloseTo(20.955)
   })
+
+  it('nq varsa RPI hariç miktar', () => {
+    const t = parseAggTradePayload(
+      JSON.stringify({ e: 'aggTrade', s: 'BTCUSDT', a: 3, p: '100', q: '2', nq: '1.5', m: false, T: 1 }),
+    )
+    expect(t?.qty).toBeCloseTo(1.5)
+    expect(t?.notional).toBeCloseTo(150)
+  })
 })

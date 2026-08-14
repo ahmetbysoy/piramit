@@ -7,7 +7,7 @@ import type { LayerWallet } from './layerWallet'
 import { totalCount } from './layerWallet'
 
 export const ADAPT_P = [0.5, 0.75, 0.9, 0.97, 0.99, 0.999] as const
-const MIN_TRADES = 40
+export const ADAPT_MIN_TRADES = 40
 const HYSTERESIS = 0.18
 
 export function fixedEdges(): number[] {
@@ -33,7 +33,7 @@ export function edgesFromHistogram(
 ): number[] {
   const counts = buckets.map(totalCount)
   const total = counts.reduce((a, n) => a + n, 0)
-  if (total < MIN_TRADES) {
+  if (total < ADAPT_MIN_TRADES) {
     const med = percentileFloor(counts, total, 0.5)
     return prev ?? (total >= 8 ? scaleFixedEdges(med) : fixedEdges())
   }
