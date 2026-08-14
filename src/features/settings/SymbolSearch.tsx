@@ -25,7 +25,7 @@ export function SymbolSearch({ registry, value, onPick, ready }: Props) {
       .map((s) => registry.get(s) ?? { symbol: s, base: s.replace(/USDT|USDC$/, ''), tickSize: '0.01', stepSize: '1' })
       .filter((s) => !base.some((b) => b.symbol === s.symbol))
     return [...favRows, ...base].slice(0, 14)
-  }, [ready, registry, q, open, favs])
+  }, [ready, registry, q, favs])
 
   useEffect(() => {
     const onDoc = (e: Event) => {
