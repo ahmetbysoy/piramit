@@ -1,6 +1,7 @@
 /** Tek sorumluluk: exchangeInfo → tickSize + açık futures listesi. */
 
 import { EXCHANGE_INFO_URLS } from '../ws/endpoints'
+import { SEED_SYMBOLS } from './seedSymbols'
 
 export type SymbolMeta = {
   symbol: string
@@ -14,6 +15,10 @@ export class PrecisionRegistry {
   private list: SymbolMeta[] = []
   loaded = false
   error: string | null = null
+
+  constructor() {
+    this.applySeed()
+  }
 
   get(symbol: string): SymbolMeta | undefined {
     return this.map.get(symbol.toUpperCase())
@@ -65,6 +70,17 @@ export class PrecisionRegistry {
       }
     }
     this.error = lastErr
+    this.loaded = true
+  }
+
+  private applySeed(): void {
+    this.map.clear()
+    this.list = []
+    for (const s of SEED_SYMBOLS) {
+      this.map.set(s.symbol, s)
+      this.list.push(s)
+    }
+    this.loaded = true
   }
 
   private ingest(json: {

@@ -4,6 +4,8 @@ export const MARKET_WS = 'wss://fstream.binance.com/market'
 
 export const EXCHANGE_INFO_URLS = [
   'https://fapi.binance.com/fapi/v1/exchangeInfo',
+  'https://fapi1.binance.com/fapi/v1/exchangeInfo',
+  'https://fapi2.binance.com/fapi/v1/exchangeInfo',
 ] as const
 
 export const EXCHANGE_INFO_URL = EXCHANGE_INFO_URLS[0]
