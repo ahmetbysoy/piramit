@@ -1,24 +1,37 @@
 # Piramit
 
-Binance USD-M futures **agresyon haritası**. Fiyat değil; taker alış/satış büyüklük katmanları.
+Binance USD-M futures **agresyon haritası**. Fiyat tahmini değil; taker alış/satış **USDT notional** katmanları.
 
-Canlı: https://piramit.vercel.app
+Canlı: https://piramit.vercel.app · Bot: [@piramitler_bot](https://t.me/piramitler_bot)
 
 ## Ne bakıyorsun
 
-- **Katmanlar** (Toz → Kraken): **USDT notional** = fiyat × adet. Adet sayılmaz. Varsayılan **adaptif** (yüzdelik). **Sabit** mod BTC tablosunu bu coin’in medyan USDT’sine ölçekler.
-- **OI**: Binance kontrat verir; ekranda `kontrat × fiyat` → USDT. CORS olursa “OI yok” yazar.
-- **1dk vs açılıştan**: kısa/uzun çelişki asıl cümle.
-- **Toplama / boşaltma**: tepe vs taban + fiyat (tanh, oturum %’si 0.4’te satüre olmaz). OI gelmezse (CORS/451) metinde **OI yok** yazar, uydurma yok.
-- **Salvo**: 3sn benzer vuruşlar.
-- Radar, favori, yerel alarm, veri tasarrufu Ayar’da.
-- Telegram: [@piramitler_bot](https://t.me/piramitler_bot) menü = site. `t.me/piramitler_bot/app?startapp=ETH` için BotFather `/newapp`. `?s=ETH` / `#ETH` aynı.
+- **Katman** (Toz → Kraken): `fiyat × adet` = USDT. Adet sayılmaz.
+- **Adaptif eşik**: yüzdelik. **Sabit**: BTC tablosu × bu coin’in medyan USDT’si.
+- **1dk vs açılıştan**: kısa/uzun çelişki cümlesi.
+- **Toplama / boşaltma**: tepe vs taban + fiyat (`tanh`). OI yoksa yalan yok.
+- **OI**: Binance kontrat verir; ekran `kontrat × fiyat` USDT. CORS → “OI yok”.
+- **Salvo**, radar, favori, yerel alarm, veri tasarrufu.
+
+Telegram Mini App: BotFather `/newapp` → `https://piramit.vercel.app` → `t.me/piramitler_bot/app?startapp=ETH`. Site: `?s=ETH` / `#ETH`.
 
 ## Veri
 
-- WS: `wss://fstream.binance.com/market` (`aggTrade`, `!forceOrder@arr`, radar açıkken `!miniTicker@arr`)
-- REST: `fapi.binance.com` `exchangeInfo` + `openInterest`
-- Mock / simülasyon yok.
+- WS: `wss://fstream.binance.com/market` — `aggTrade`, `!forceOrder@arr`, radar’da `!miniTicker@arr`
+- REST: `exchangeInfo` (tohum liste + fapi/fapi1/fapi2), `openInterest`
+- **API key yok.** Public market. Mock yok.
+
+## Mimari
+
+`src/core` React tanımaz. `unwrapWs` bir kez parse. Motor 20fps snapshot. Soket mümkünse Worker.
+
+```
+src/core/engine   piramit, pencere, divergence
+src/core/ws       BinanceSocket + worker
+src/core/market   aggTrade / OI / forceOrder
+src/features      piramit (HTML 3 kolon), akış, radar, ayar
+src/telegram      tema, Back, Paylaş, start_param
+```
 
 ## Geliştirme
 
@@ -26,10 +39,14 @@ Canlı: https://piramit.vercel.app
 npm install
 npm run dev
 npm test
+npm run lint
+npm run build
 ```
 
-Sinyal eşikleri: `src/core/engine/signalConfig.ts`
+Sinyal: `src/core/engine/signalConfig.ts`
 
-## Mimari
+## Bilinçli redler
 
-`src/core` React tanımaz. WS mesajı bir kez parse edilir (`unwrapWs`), motor 20fps snapshot basar.
+- Canvas içine yazı yok (dar katmanda çorba).
+- `X-Frame-Options: DENY` yok — Telegram iframe kırılır.
+- Binance secret env yok — gerekmez.
