@@ -45,6 +45,14 @@ npm run build
 
 Sinyal: `src/core/engine/signalConfig.ts`
 
+## Dokümanlar
+
+- [ARCHITECTURE](docs/ARCHITECTURE.md) — modül haritası, tek sorumluluklar, bilinçli redler
+- [DATA_FLOW](docs/DATA_FLOW.md) — WS baytlarından 20fps snapshot'a veri yolu
+- [API](docs/API.md) — Binance USD-M WS/REST ve Telegram Mini App referansı
+- [WALKTHROUGH](docs/WALKTHROUGH.md) — ekran ekran kullanım kılavuzu
+- [PORT_NOTLARI](docs/PORT_NOTLARI.md) — `piram` (Android) projesinden taşınacak fikirler/patch'ler
+
 ## Bilinçli redler
 
 - Canvas içine yazı yok (dar katmanda çorba).
