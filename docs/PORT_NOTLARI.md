@@ -1,5 +1,9 @@
 # Piram → Piramit Taşıma Notları (Kod Çıkarımı)
 
+> ⚠️ Yön: **piram → piramit** (web projesinin Android'den alacakları).
+> Android projesi için gereken ters yön (`piramit → piram`) **piram reposunda**:
+> [`piram/docs/PORT_NOTLARI.md`](https://github.com/ahmetbysoy/piram/blob/main/docs/PORT_NOTLARI.md)
+
 > `piram` (Android/Kotlin) projesindeki **işe yarayacak fonksiyonlar, stratejiler, kurgular,
 > mantıksal fikirler ve geliştirme patch'leri** — `piramit` (web/TypeScript) projesinde nereye
 > lazım olur, ne alınır, ne uyarlanır, ne reddedilir.
